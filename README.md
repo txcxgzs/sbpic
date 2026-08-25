@@ -68,65 +68,37 @@ FLUSH PRIVILEGES;
 
 表会在服务启动时自动创建，无需手动建表。
 
-### 3. 安装与配置
+### 3. 一键安装（推荐）
 
 ```bash
 git clone <repo> sbimg
 cd sbimg
-npm install
-cp .env.example .env
+npm run setup
 ```
 
-编辑 `.env`：
+`npm run setup` 会交互式引导你完成全部配置：安装依赖 → 填写 R2/MySQL/域名（可选自动建库建用户）→ 生成 `.env`（含随机 SESSION_SECRET）→ 编译。完成后执行 `npm run deploy` 启动。
 
-| 变量 | 说明 |
-|------|------|
-| `PORT` | 服务端口，默认 3000 |
-| `BASE_URL` | 对外访问域名（用于生成链接，不要带末尾斜杠） |
-| `MAX_SIZE_MB` | 单文件大小上限（MB），默认 20 |
-| `RATE_LIMIT_PER_MIN` | 每 IP 每分钟上传次数上限，默认 30 |
-| `R2_ACCOUNT_ID` `R2_ACCESS_KEY_ID` `R2_SECRET_ACCESS_KEY` `R2_BUCKET` | R2 凭据 |
-| `DB_HOST` `DB_PORT` `DB_USER` `DB_PASSWORD` `DB_NAME` | MySQL 连接信息 |
-| `SESSION_SECRET` | session 加密密钥，至少 16 字符，请改成长随机串 |
-| `TRUST_PROXY` | 信任的反代跳数：直连 0，一层反代 1，Cloudflare+nginx 2 |
-| `COOKIE_SECURE` | 生产 HTTPS 设 true，cookie 才带 secure |
-| `INIT_ADMIN_USER` `INIT_ADMIN_PASS` | 初始管理员账号；密码留空则启动随机生成并打印到控制台 |
-| `ALLOW_REGISTER` | 是否开放注册，true/false |
-| `REGISTER_LIMIT_PER_10MIN` | 每 IP 每 10 分钟注册次数上限 |
-| `MAIL_ENABLED` | 是否启用邮件（关闭则注册直接创建已验证用户，本地调试用） |
-| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` | SMTP 发信配置（Brevo 用 `smtp-relay.brevo.net:587`） |
-| `APP_URL` | 对外域名，用于生成验证链接（一般与 BASE_URL 相同） |
-| `TURNSTILE_ENABLED` | 是否启用 Turnstile 人机验证（关闭则注册不校验，本地调试用） |
-| `TURNSTILE_SITE_KEY` `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 站点密钥与密钥 |
-| `GLOBAL_LIMIT_PER_MIN` | 全局每 IP 每分钟请求数（防扫描），默认 300 |
-| `UPLOAD_LIMIT_PER_MIN` | 上传每 IP 每分钟次数，默认 100 |
-| `UPLOAD_LIMIT_PER_USER_PER_MIN` | 上传每用户每分钟次数，默认 60 |
-| `VIEW_LIMIT_PER_MIN` | 图片访问 /i/* 每 IP 每分钟次数，默认 600 |
-| `LOGIN_FAIL_THRESHOLD` | 登录连续失败多少次后封禁，默认 5 |
-| `LOGIN_BAN_MINUTES` | 登录封禁分钟数，默认 15 |
-| `UPLOAD_CONCURRENCY` | 同时处理的上传请求数上限（超出返 503），默认 20 |
+> 也可手动：`npm install` → `cp .env.example .env` 编辑配置 → `npm run build`。完整环境变量说明见 `.env.example` 注释。
 
-### 4. 构建与运行
+### 4. 一键部署
 
 ```bash
-npm run build
-npm start
+npm run deploy              # 编译 + 启动/重启（自动检测 PM2，没有则 nohup 后台跑）
+npm run deploy -- status    # 查看运行状态
+npm run deploy -- logs      # 查看日志
+npm run deploy -- stop      # 停止
 ```
 
-开发模式（热重载）：
+- 检测到 PM2 则用 PM2 守护（自动 `pm2 save`），没有则用 nohup 后台启动并提示安装 PM2
+- 首次启动若 `users` 表为空，自动创建初始管理员；`INIT_ADMIN_PASS` 留空则随机密码打印到控制台，**请登录后立即改密码**
+- 开发模式（热重载）：`npm run dev`
 
-```bash
-npm run dev
-```
-
-首次启动若 `users` 表为空，会自动创建初始管理员。若 `INIT_ADMIN_PASS` 留空，随机密码会打印到控制台，**请登录后立即改密码**。
-
-### 5. 守护进程（PM2）
+### 5. PM2 开机自启（可选）
 
 ```bash
 npm install -g pm2
-pm2 start dist/index.js --name sbimg
-pm2 save && pm2 startup
+npm run deploy            # 用 PM2 启动
+pm2 startup               # 按提示执行输出的一行命令注册开机自启
 ```
 
 ### 6. Nginx 反代（可选）

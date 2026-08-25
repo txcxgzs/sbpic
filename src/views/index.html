@@ -3,384 +3,644 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>烧饼图床</title>
+<title>烧饼图床 · sbimg</title>
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #222; }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 60px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  header h1 { font-size: 20px; margin: 0; }
-  header .sub { color: #888; font-size: 13px; }
-  .topbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .pill { font-size: 12px; padding: 3px 9px; border-radius: 20px; background: #eef1f4; color: #555; }
-  .pill.admin { background: #fee9e9; color: #b91c1c; }
-  .btn { padding: 8px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; font-size: 13px; cursor: pointer; }
-  .btn.ghost { background: #eef1f4; color: #333; }
-  .btn.danger { background: #dc2626; }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .card { background: #fff; border: 1px solid #e6e8eb; border-radius: 10px; padding: 16px; margin: 14px 0; }
-  .card h2 { font-size: 15px; margin: 0 0 12px; }
-  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
-  .row label { font-size: 13px; color: #555; min-width: 80px; }
-  input[type="text"], input[type="password"], input[type="email"], input[type="number"], select { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-  .banner { background: #fff8e1; border: 1px solid #ffe082; color: #8a6d3b; padding: 10px 14px; border-radius: 8px; margin: 12px 0; font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .drop { border: 2px dashed #cfd3d8; border-radius: 10px; padding: 30px 16px; text-align: center; color: #888; cursor: pointer; transition: .15s; }
-  .drop.drag { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
-  .results { margin-top: 16px; display: grid; gap: 12px; }
-  .item { background: #fff; border: 1px solid #e6e8eb; border-radius: 10px; padding: 12px; display: flex; gap: 14px; align-items: center; }
-  .item img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: #f0f0f0; flex-shrink: 0; }
-  .item .meta { flex: 1; min-width: 0; }
-  .item .name { font-size: 13px; word-break: break-all; }
-  .item .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .chip { font-size: 12px; padding: 3px 8px; border-radius: 5px; background: #eef1f4; color: #333; cursor: pointer; user-select: none; }
-  .chip:hover { background: #e2e7ee; }
-  .chip.url { background: #e7f0ff; color: #2563eb; }
-  .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #fff3cd; color: #8a6d3b; margin-left: 6px; }
-  .ok { color: #16a34a; } .bad { color: #dc2626; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e6e8eb; }
-  th, td { padding: 9px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f1f3; }
-  th { background: #fafbfc; color: #666; font-weight: 600; }
-  td img { width: 44px; height: 44px; object-fit: cover; border-radius: 5px; }
-  td .k { word-break: break-all; max-width: 220px; display: inline-block; }
-  .del { color: #dc2626; cursor: pointer; }
-  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px; opacity: 0; transition: .2s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-  .empty { color: #999; text-align: center; padding: 20px; }
-  .hidden { display: none !important; }
-  a { color: #2563eb; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-  .tab { padding: 8px 14px; border: 1px solid #e6e8eb; border-radius: 6px 6px 0 0; background: #fafbfc; cursor: pointer; font-size: 13px; }
-  .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
-  .turnstile-wrap { margin: 8px 0; min-height: 65px; }
-  code { background: #eef1f4; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
-  @media (max-width: 640px) { .wrap { padding: 14px 10px 40px; } header h1 { font-size: 18px; } .row label { min-width: 64px; } }
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --card-2:#f4f5f7;
+  --border:#e9ebef; --border-2:#dde0e6;
+  --text:#1a1d23; --text-2:#5b6472; --text-3:#9aa1ac;
+  --accent:#2f5bd6; --accent-soft:#eef2ff; --accent-soft-2:#e0e7ff;
+  --ok:#15a05a; --ok-bg:#ecfaf2; --warn:#b8862a; --warn-bg:#fbf4e6; --bad:#d12c3f; --bad-bg:#fceef0;
+  --radius:10px; --radius-sm:7px;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --shadow:0 4px 16px rgba(16,24,40,.08);
+  --shadow-lg:0 12px 40px rgba(16,24,40,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d4d8df;border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#b8bdc6}
+
+/* ===== 布局 ===== */
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:20;transition:transform .25s ease}
+.sidebar .logo{padding:22px 20px 16px;display:flex;align-items:center;gap:11px}
+.sidebar .logo .mark{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px}
+.sidebar .logo .txt{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.sidebar .logo .txt span{display:block;font-size:10px;color:var(--text-3);font-weight:500;letter-spacing:1.5px;margin-top:1px}
+.nav{flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.8px;text-transform:uppercase;padding:14px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--text-2);cursor:pointer;font-size:13.5px;font-weight:500;transition:.12s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.nav-item:hover{background:var(--card-2);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent)}
+.nav-item .ico{width:18px;text-align:center;flex-shrink:0;font-size:15px;opacity:.8}
+.nav-item.active .ico{opacity:1}
+.sidebar .foot{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3)}
+.main{flex:1;margin-left:230px;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:58px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;background:rgba(246,247,249,.82);backdrop-filter:blur(10px);z-index:10}
+.topbar .crumb{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.topbar .crumb .sub{color:var(--text-3);font-weight:400;margin-left:8px;font-size:13px}
+.topbar .user-chip{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}
+.topbar .user-chip .avatar{width:30px;height:30px;border-radius:50%;background:var(--card-2);border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-2)}
+.topbar .user-chip .info{display:flex;flex-direction:column;line-height:1.3;text-align:right}
+.topbar .user-chip .info .name{font-weight:600;font-size:13px;color:var(--text)}
+.topbar .user-chip .info .role{font-size:11px;color:var(--text-3)}
+.content{padding:30px 32px;flex:1;max-width:1180px;width:100%}
+
+/* ===== 通用 ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.1px}
+.card-title .sub{font-size:12px;color:var(--text-3);font-weight:400}
+.btn{padding:8px 15px;border:1px solid var(--border-2);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;white-space:nowrap}
+.btn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.btn-primary{background:var(--accent);border:1px solid var(--accent);color:#fff}
+.btn-primary:hover{background:#2952c2;border-color:#2952c2;color:#fff}
+.btn-danger{border-color:#e8c5c9;color:var(--bad);background:var(--card)}
+.btn-danger:hover{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--card-2);color:var(--text);border-color:var(--border)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:600;letter-spacing:.1px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;background:var(--card);border:1px solid var(--border-2);border-radius:var(--radius-sm);color:var(--text);font-size:13.5px;font-family:inherit;transition:.12s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field .hint{font-size:11px;color:var(--text-3);margin-top:5px}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px;line-height:1.5}
+.badge-ok{background:var(--ok-bg);color:var(--ok)}
+.badge-warn{background:var(--warn-bg);color:var(--warn)}
+.badge-bad{background:var(--bad-bg);color:var(--bad)}
+.badge-admin{background:var(--warn-bg);color:var(--warn)}
+.badge-user{background:var(--card-2);color:var(--text-2);border:1px solid var(--border-2)}
+
+/* ===== 统计卡 ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm)}
+.stat .label{font-size:12px;color:var(--text-3);margin-bottom:8px;font-weight:500}
+.stat .num{font-size:26px;font-weight:700;letter-spacing:-.6px;color:var(--text)}
+.stat .sub{font-size:11px;color:var(--text-3);margin-top:4px}
+
+/* ===== 表格 ===== */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:11px 14px;text-align:left;font-weight:600;color:var(--text-3);font-size:11px;letter-spacing:.3px;border-bottom:1px solid var(--border);background:var(--card-2);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(47,91,214,.02)}
+.mono{font-family:"SF Mono","JetBrains Mono","Cascadia Code",Consolas,monospace;font-size:12px;color:var(--text-2)}
+.muted{color:var(--text-3)}
+.thumb{width:42px;height:42px;border-radius:6px;object-fit:cover;background:var(--card-2);border:1px solid var(--border)}
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.pager button{min-width:34px;height:34px}
+.empty{text-align:center;padding:42px 20px;color:var(--text-3);font-size:13px}
+
+/* ===== 上传区 ===== */
+.drop{border:2px dashed var(--border-2);border-radius:var(--radius);padding:46px 24px;text-align:center;cursor:pointer;transition:.18s;background:var(--card-2)}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop.drag{border-color:var(--accent);background:var(--accent-soft)}
+.drop .big{font-size:30px;margin-bottom:12px;opacity:.4}
+.drop .t1{font-size:14px;color:var(--text-2);margin-bottom:4px;font-weight:500}
+.drop .t2{font-size:12px;color:var(--text-3)}
+.drop.disabled{opacity:.5;cursor:not-allowed}
+.upload-results{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.upload-item{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow-sm)}
+.upload-item img{width:52px;height:52px;border-radius:6px;object-fit:cover;background:var(--card-2);flex-shrink:0}
+.upload-item .meta{flex:1;min-width:0}
+.upload-item .name{font-size:13px;word-break:break-all;font-weight:500}
+.upload-item .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:11px;padding:4px 9px;border-radius:5px;background:var(--card-2);border:1px solid var(--border-2);color:var(--text-2);cursor:pointer;user-select:none;transition:.12s;font-weight:500}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip-url{border-color:var(--accent-soft-2);color:var(--accent);background:var(--accent-soft)}
+.tag-dedup{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--warn-bg);color:var(--warn);margin-left:6px;font-weight:600}
+
+/* ===== 信息行（只读展示） ===== */
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--border);gap:16px}
+.info-row:last-child{border-bottom:none;padding-bottom:0}
+.info-row:first-child{padding-top:0}
+.info-row .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.info-row .label{font-size:12px;color:var(--text-3);font-weight:500}
+.info-row .value{font-size:14px;color:var(--text);font-weight:500;word-break:break-all}
+.info-row .value .muted{color:var(--text-3);font-weight:400}
+.info-row .right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* ===== Banner ===== */
+.banner{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:13px;border:1px solid}
+.banner-warn{background:var(--warn-bg);border-color:#e8d6a8;color:var(--warn)}
+
+/* ===== Modal ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,29,35,.42);backdrop-filter:blur(3px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+.modal-overlay.show{display:flex;animation:fadeIn .18s}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);width:440px;max-width:92vw;box-shadow:var(--shadow-lg);animation:slideUp .22s ease}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head .title{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.modal-head .close{cursor:pointer;color:var(--text-3);font-size:22px;background:none;border:none;padding:0 4px;line-height:1}
+.modal-head .close:hover{color:var(--text)}
+.modal-body{padding:22px}
+.modal-body .field:last-child{margin-bottom:0}
+.modal-foot{padding:15px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Toast ===== */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transition:.2s;pointer-events:none;z-index:200}
+.toast.show{opacity:1}
+.toast.ok{background:var(--ok)}
+.toast.bad{background:var(--bad)}
+
+/* ===== Auth 页 ===== */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-card{width:380px;max-width:92vw;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.auth-head{text-align:center;padding:40px 28px 24px}
+.auth-head .mark{width:52px;height:52px;border-radius:14px;background:var(--accent);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;letter-spacing:-1px}
+.auth-head h1{font-size:20px;margin-bottom:4px;letter-spacing:-.3px}
+.auth-head p{font-size:13px;color:var(--text-3)}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border)}
+.auth-tab{flex:1;padding:13px;text-align:center;font-size:13.5px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:.12s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;font-weight:500}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.auth-body{padding:26px 28px 30px}
+.auth-body .field:last-of-type{margin-bottom:18px}
+.auth-msg{color:var(--bad);font-size:12px;min-height:16px;margin-bottom:8px}
+.turnstile-wrap{margin:4px 0 14px;min-height:65px}
+
+/* ===== 响应式 ===== */
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}
+  .main{margin-left:0}
+  .content{padding:20px 18px}
+  .menu-toggle{display:block!important}
+}
+.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;margin-right:12px;padding:4px}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div><h1>烧饼图床 <span class="sub">/ sbimg · Cloudflare R2</span></h1></div>
-    <div class="topbar" id="topbar"></div>
-  </header>
 
-  <!-- 未验证横幅 -->
-  <div class="banner hidden" id="verifyBanner">
-    <span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证，或</span>
-    <button class="btn ghost" id="btnResend" style="padding:5px 10px;">重发验证邮件</button>
-  </div>
-
-  <!-- 登录/注册视图 -->
-  <div id="authView" class="hidden">
-    <div class="card" style="max-width:380px;margin:40px auto;">
-      <div class="tabs">
-        <div class="tab active" data-tab="login" id="tabLogin">登录</div>
-        <div class="tab" data-tab="register" id="tabRegister">注册</div>
-      </div>
+<!-- ===== Auth 页 ===== -->
+<div class="auth-wrap" id="authView">
+  <div class="auth-card">
+    <div class="auth-head">
+      <div class="mark">饼</div>
+      <h1>烧饼图床</h1>
+      <p>自托管 · Cloudflare R2</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">登录</button>
+      <button class="auth-tab" id="tabRegister">注册</button>
+    </div>
+    <div class="auth-body">
       <div id="loginBox">
-        <div class="row"><label>用户名</label><input id="loginUser" type="text" /></div>
-        <div class="row"><label>密码</label><input id="loginPass" type="password" /></div>
-        <div class="row" style="justify-content:flex-end;"><button class="btn" id="btnLogin">登录</button></div>
+        <div class="field"><label>用户名</label><input id="loginUser" type="text" autocomplete="username" /></div>
+        <div class="field"><label>密码</label><input id="loginPass" type="password" autocomplete="current-password" /></div>
+        <div class="auth-msg" id="loginMsg"></div>
+        <button class="btn btn-primary" id="btnLogin" style="width:100%;padding:10px">登录</button>
       </div>
       <div id="registerBox" class="hidden">
-        <div class="row"><label>用户名</label><input id="regUser" type="text" placeholder="3-32位字母数字下划线" /></div>
-        <div class="row"><label>邮箱</label><input id="regEmail" type="email" placeholder="用于验证激活" /></div>
-        <div class="row"><label>密码</label><input id="regPass" type="password" placeholder="至少8位" /></div>
+        <div class="field"><label>用户名</label><input id="regUser" type="text" placeholder="3-32 位字母数字下划线" /></div>
+        <div class="field"><label>邮箱</label><input id="regEmail" type="email" placeholder="用于验证激活" /></div>
+        <div class="field"><label>密码</label><input id="regPass" type="password" placeholder="至少 8 位" /></div>
         <div class="turnstile-wrap" id="turnstileWrap"></div>
-        <div class="row" style="justify-content:flex-end;"><button class="btn" id="btnRegister">注册</button></div>
-        <p class="sub" style="font-size:12px;margin:6px 0 0;">注册后需点击邮件中的链接激活邮箱才能上传。</p>
-      </div>
-      <div id="authMsg" style="color:#dc2626;font-size:13px;margin-top:6px;"></div>
-    </div>
-  </div>
-
-  <!-- 控制台视图 -->
-  <div id="appView" class="hidden">
-    <div class="card">
-      <h2>上传图片</h2>
-      <div class="drop" id="drop">
-        <p>拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴</p>
-        <p class="sub" style="font-size:12px;">支持 jpg/png/gif/webp/bmp，单文件上限见服务端配置</p>
-        <input id="fileInput" type="file" accept="image/*" multiple hidden />
-      </div>
-      <div class="results" id="results"></div>
-    </div>
-
-    <div class="card">
-      <h2>我的图片</h2>
-      <table>
-        <thead><tr><th>预览</th><th>文件名 / Key</th><th>大小</th><th>尺寸</th><th>时间</th><th>操作</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <div class="pager" id="pager"></div>
-    </div>
-
-    <div class="card">
-      <h2>账户</h2>
-      <div class="row"><label>邮箱</label><input id="accEmail" type="email" /> <span id="emailStatus" style="font-size:12px;"></span></div>
-      <div class="row" style="justify-content:flex-end;"><button class="btn ghost" id="btnChangeEmail">修改邮箱(需重新验证)</button></div>
-      <div class="row"><label>API Token</label><input id="apiToken" type="text" readonly /> <button class="btn ghost" id="btnCopyToken">复制</button> <button class="btn ghost" id="btnRegenToken">重置</button></div>
-      <p class="sub" style="font-size:12px;margin:0 0 10px;">上传 API 用此 Token（Header: <code>Authorization: Bearer &lt;token&gt;</code>）。重置后旧 Token 立即失效。</p>
-      <div class="row"><label>旧密码</label><input id="oldPass" type="password" /></div>
-      <div class="row"><label>新密码</label><input id="newPass" type="password" placeholder="至少8位" /></div>
-      <div class="row" style="justify-content:flex-end;"><button class="btn" id="btnChangePass">修改密码</button></div>
-    </div>
-
-    <!-- 管理员视图 -->
-    <div id="adminView" class="hidden">
-      <div class="card">
-        <h2>用户管理（管理员）</h2>
-        <table>
-          <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>验证</th><th>图片数</th><th>创建时间</th><th>操作</th></tr></thead>
-          <tbody id="userTbody"></tbody>
-        </table>
-        <h3 style="font-size:14px;margin:16px 0 8px;">新建用户</h3>
-        <div class="row"><label>用户名</label><input id="newUser" type="text" /></div>
-        <div class="row"><label>邮箱</label><input id="newUserEmail" type="email" /></div>
-        <div class="row"><label>密码</label><input id="newUserPass" type="password" /></div>
-        <div class="row"><label>角色</label>
-          <select id="newUserRole"><option value="user">普通用户</option><option value="admin">管理员</option></select>
-        </div>
-        <div class="row" style="justify-content:flex-end;"><button class="btn" id="btnCreateUser">创建</button></div>
-      </div>
-
-      <div class="card">
-        <h2>全部图片（管理员）</h2>
-        <div class="row" style="margin-bottom:8px;">
-          <label>筛选</label>
-          <select id="adminFilter">
-            <option value="all">全部</option>
-            <option value="mine">仅自己</option>
-            <option value="unowned">无主</option>
-          </select>
-          <button class="btn ghost" id="btnAdminRefresh">刷新</button>
-        </div>
-        <table>
-          <thead><tr><th>预览</th><th>Key</th><th>归属</th><th>大小</th><th>时间</th><th>操作</th></tr></thead>
-          <tbody id="adminTbody"></tbody>
-        </table>
-        <div class="pager" id="adminPager"></div>
+        <div class="auth-msg" id="regMsg"></div>
+        <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:10px">注册</button>
+        <p style="font-size:11px;color:var(--text-3);margin-top:14px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ===== 主应用 ===== -->
+<div class="app hidden" id="appView">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="mark">饼</div>
+      <div class="txt">烧饼图床<span>SBIMG</span></div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="foot">v1.0 · R2 Storage</div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="crumb" id="crumb">仪表盘</div>
+      </div>
+      <div class="user-chip" id="userChip">
+        <div class="info"><span class="name" id="chipName"></span><span class="role" id="chipRole"></span></div>
+        <div class="avatar" id="chipAvatar"></div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-head"><span class="title" id="modalTitle"></span><button class="close" id="modalClose">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const $ = (s) => document.querySelector(s);
-let me = null, turnstileToken = null, tsWidgetId = null;
+const $ = s => document.querySelector(s);
+let me = null, turnstileToken = null, tsWidgetId = null, turnstileEnabled = false;
 let page = 1, pageSize = 30, total = 0;
 let adminPage = 1, adminTotal = 0, adminFilter = 'all';
+let curView = 'dashboard';
 
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1600); }
-async function copy(text){ try { await navigator.clipboard.writeText(text); toast('已复制'); } catch { toast('复制失败'); } }
-function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* ===== 工具 ===== */
+function toast(msg, type){ const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (type?' '+type:''); setTimeout(()=>t.className='toast', 2000); }
+async function copy(text){ try { await navigator.clipboard.writeText(text); toast('已复制','ok'); } catch { toast('复制失败','bad'); } }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fmtSize(n){ if(n<1024)return n+' B'; if(n<1048576)return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(2)+' MB'; }
 function fmtDate(d){ return new Date(d).toLocaleString('zh-CN',{hour12:false}); }
-async function api(path, opts){ const r = await fetch(path, opts); const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = { raw: t }; } if (!r.ok) throw new Error(j.error || j.raw || ('HTTP '+r.status)); return j; }
+function maskToken(t){ if(!t||t.length<16) return t||'-'; return t.slice(0,8)+'••••••••'+t.slice(-4); }
+function maskEmail(e){ if(!e) return '-'; const at=e.indexOf('@'); if(at<0) return e; const u=e.slice(0,at), d=e.slice(at); return (u.length>3?u.slice(0,3)+'•••':u)+d; }
+async function api(path, opts){ const r = await fetch(path, opts); const t = await r.text(); let j; try{j=JSON.parse(t)}catch{j={raw:t}} if(!r.ok) throw new Error(j.error||j.raw||'HTTP '+r.status); return j; }
 
-// ===== 鉴权 =====
-async function loadMe(){ try { me = await api('/api/auth/me'); return true; } catch { return false; } }
-function showAuth(){ $('#authView').classList.remove('hidden'); $('#appView').classList.add('hidden'); }
-function showApp(){
-  $('#authView').classList.add('hidden'); $('#appView').classList.remove('hidden');
-  $('#topbar').innerHTML = `<span class="pill ${me.role==='admin'?'admin':''}">${escapeHtml(me.username)} · ${me.role==='admin'?'管理员':'用户'}</span><button class="btn ghost" id="btnLogout">登出</button>`;
-  $('#btnLogout').addEventListener('click', logout);
-  $('#apiToken').value = me.api_token;
-  // 邮箱与验证状态
-  $('#accEmail').value = me.email || '';
-  $('#emailStatus').innerHTML = me.email_verified ? '<span class="ok">已验证</span>' : '<span class="bad">未验证</span>';
-  // 未验证横幅
-  if (!me.email_verified) { $('#verifyBanner').classList.remove('hidden'); } else { $('#verifyBanner').classList.add('hidden'); }
-  // 未验证时禁用上传
-  const canUpload = me.email_verified;
-  if (!canUpload) { $('#drop').style.opacity = .5; $('#drop').querySelector('p').textContent = '邮箱未验证，上传已禁用'; }
-  else { $('#drop').style.opacity = 1; $('#drop').querySelector('p').textContent = '拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴'; }
-  if (me.role === 'admin') { $('#adminView').classList.remove('hidden'); loadUsers(); loadAdminImages(); }
-  else { $('#adminView').classList.add('hidden'); }
-  loadImages();
+/* ===== Modal ===== */
+function openModal(title, bodyHtml, footHtml){
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = bodyHtml;
+  $('#modalFoot').innerHTML = footHtml;
+  $('#modalOverlay').classList.add('show');
 }
-async function logout(){ await api('/api/auth/logout',{method:'POST'}); me=null; showAuth(); }
+function closeModal(){ $('#modalOverlay').classList.remove('show'); }
+$('#modalClose').addEventListener('click', closeModal);
+$('#modalOverlay').addEventListener('click', e => { if(e.target===$('#modalOverlay')) closeModal(); });
+function confirmBox(title, msg, onOk, danger){
+  openModal(title, `<p style="font-size:13.5px;color:var(--text-2);line-height:1.6">${msg}</p>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn ${danger?'btn-danger':'btn-primary'}" data-act="ok">${danger?'确认删除':'确认'}</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=ok]').addEventListener('click', () => { closeModal(); onOk(); });
+}
 
-// 登录/注册 tab
-$('#tabLogin').addEventListener('click', () => switchTab('login'));
-$('#tabRegister').addEventListener('click', () => switchTab('register'));
-function switchTab(t){
+/* ===== 鉴权 ===== */
+async function loadMe(){ try{ me = await api('/api/auth/me'); return true; }catch{ return false; } }
+async function logout(){ await api('/api/auth/logout',{method:'POST'}); me=null; $('#appView').classList.add('hidden'); $('#authView').classList.remove('hidden'); }
+
+$('#tabLogin').addEventListener('click', () => switchAuthTab('login'));
+$('#tabRegister').addEventListener('click', () => switchAuthTab('register'));
+function switchAuthTab(t){
   $('#tabLogin').classList.toggle('active', t==='login');
   $('#tabRegister').classList.toggle('active', t==='register');
   $('#loginBox').classList.toggle('hidden', t!=='login');
   $('#registerBox').classList.toggle('hidden', t!=='register');
-  $('#authMsg').textContent='';
-  if (t==='register') setupTurnstile();
+  $('#loginMsg').textContent=''; $('#regMsg').textContent='';
+  if(t==='register') setupTurnstile();
 }
 $('#btnLogin').addEventListener('click', async () => {
-  try { me = await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})}); showApp(); }
-  catch(e){ $('#authMsg').textContent = e.message; }
+  try{ me = await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})}); enterApp(); }
+  catch(e){ $('#loginMsg').textContent = e.message; }
 });
 $('#btnRegister').addEventListener('click', async () => {
-  if (!turnstileEnabled && turnstileToken === null) { /* disabled, ok */ }
-  try {
+  try{
     me = await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#regUser').value.trim(),email:$('#regEmail').value.trim(),password:$('#regPass').value,turnstileToken})});
-    if (me.verification_sent) { toast('注册成功，请查收邮件激活'); }
-    showApp();
-  } catch(e){ $('#authMsg').textContent = e.message; if (tsWidgetId !== null && window.turnstile) window.turnstile.reset(tsWidgetId); }
-});
-$('#btnResend').addEventListener('click', async () => {
-  try { await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发'); }
-  catch(e){ toast(e.message); }
+    if(me.verification_sent) toast('注册成功，请查收邮件激活','ok');
+    enterApp();
+  }catch(e){ $('#regMsg').textContent = e.message; if(tsWidgetId!==null && window.turnstile) window.turnstile.reset(tsWidgetId); }
 });
 
-// ===== Turnstile =====
-let turnstileEnabled = false;
+/* ===== Turnstile ===== */
 async function setupTurnstile(){
-  if (tsWidgetId !== null) return; // 已渲染
-  try {
+  if(tsWidgetId!==null) return;
+  try{
     const k = await api('/api/auth/turnstile-key');
     turnstileEnabled = k.enabled;
-    if (!k.enabled) { $('#turnstileWrap').innerHTML = '<span class="sub" style="font-size:12px;">人机验证未启用</span>'; return; }
-    const s = document.createElement('script'); s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTsLoad&render=explicit'; s.async=true; s.defer=true;
-    window.onTsLoad = function(){
-      tsWidgetId = window.turnstile.render('#turnstileWrap', { sitekey: k.siteKey, callback: (t) => { turnstileToken = t; } });
-    };
+    if(!k.enabled){ $('#turnstileWrap').innerHTML = '<span style="font-size:11px;color:var(--text-3)">人机验证未启用</span>'; return; }
+    const s = document.createElement('script');
+    s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTsLoad&render=explicit';
+    s.async=true; s.defer=true;
+    window.onTsLoad = () => { tsWidgetId = window.turnstile.render('#turnstileWrap',{sitekey:k.siteKey,callback:t=>{turnstileToken=t;}}); };
     document.body.appendChild(s);
-  } catch { $('#turnstileWrap').innerHTML = '<span class="sub" style="font-size:12px;">人机验证加载失败</span>'; }
+  }catch{ $('#turnstileWrap').innerHTML='<span style="font-size:11px;color:var(--text-3)">人机验证加载失败</span>'; }
 }
 
-// ===== 上传 =====
-const drop = $('#drop'), fileInput = $('#fileInput');
-drop.addEventListener('click', () => { if (me && !me.email_verified) { toast('请先验证邮箱'); return; } fileInput.click(); });
-fileInput.addEventListener('change', () => { if(fileInput.files.length) uploadFiles(fileInput.files); fileInput.value=''; });
-['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
-['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
-drop.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) uploadFiles(ev.dataTransfer.files); });
-window.addEventListener('paste', ev => { if(!me||!me.email_verified) return; const fs=[]; for(const it of ev.clipboardData.items){ if(it.kind==='file'){ const f=it.getAsFile(); if(f) fs.push(f); } } if(fs.length) uploadFiles(fs); });
-function uploadFiles(files){ if(!me||!me.email_verified){ toast('请先验证邮箱'); return; } Array.from(files).forEach(uploadOne); }
+/* ===== 进入应用 ===== */
+function enterApp(){
+  $('#authView').classList.add('hidden');
+  $('#appView').classList.remove('hidden');
+  $('#chipName').textContent = me.username;
+  $('#chipRole').textContent = me.role==='admin' ? '管理员' : '用户';
+  $('#chipAvatar').textContent = me.username.charAt(0).toUpperCase();
+  navTo('dashboard');
+}
+
+/* ===== 导航（按角色动态生成） ===== */
+function navItems(){
+  const items = [
+    {id:'dashboard',label:'仪表盘',ico:'⊞'},
+    {id:'upload',label:'上传图片',ico:'⬆'},
+    {id:'images',label:'我的图片',ico:'▦'},
+    {id:'account',label:'账户',ico:'⚙'},
+  ];
+  if(me && me.role==='admin') items.push({id:'admin',label:'管理后台',ico:'★'});
+  return items;
+}
+function buildNav(){
+  const nav = $('#navList'); nav.innerHTML='';
+  const items = navItems();
+  items.forEach(n => {
+    const b = document.createElement('button');
+    b.className='nav-item'+(n.id===curView?' active':'');
+    b.innerHTML = `<span class="ico">${n.ico}</span>${n.label}`;
+    b.addEventListener('click', () => navTo(n.id));
+    nav.appendChild(b);
+  });
+}
+function navTo(view){
+  curView = view;
+  buildNav();
+  $('#sidebar').classList.remove('open');
+  const labels = {dashboard:'仪表盘',upload:'上传图片',images:'我的图片',account:'账户',admin:'管理后台'};
+  $('#crumb').textContent = labels[view] || '';
+  renderView(view);
+}
+$('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+$('#userChip').addEventListener('click', () => navTo('account'));
+
+/* ===== 视图分发 ===== */
+function renderView(view){
+  const c = $('#content'); c.innerHTML = '';
+  if(view==='dashboard') renderDashboard(c);
+  else if(view==='upload') renderUpload(c);
+  else if(view==='images') renderImages(c);
+  else if(view==='account') renderAccount(c);
+  else if(view==='admin') renderAdmin(c);
+}
+
+/* ===== 仪表盘 ===== */
+async function renderDashboard(c){
+  const isAdmin = me.role==='admin';
+  c.innerHTML = `
+    ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    <div class="stats" id="statsBox"><div class="stat"><div class="label">加载中…</div></div></div>
+    <div class="card">
+      <div class="card-title">最近上传<span class="sub">最新 5 张</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>文件名</th><th>大小</th><th>时间</th></tr></thead><tbody id="recentBody"><tr><td colspan="4" class="empty">加载中…</td></tr></tbody></table></div>
+    </div>`;
+  if(!me.email_verified) $('#bResend').addEventListener('click', async () => { try{ await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发','ok'); }catch(e){ toast(e.message,'bad'); } });
+  try{
+    const data = await api('/api/images?page=1&size=5');
+    const recent = data.items;
+    let myCount = data.total, allCount = data.total;
+    if(isAdmin){ try{ const all = await api('/api/images?page=1&size=1&all=1'); allCount = all.total; }catch{} }
+    $('#statsBox').innerHTML = `
+      <div class="stat"><div class="label">${isAdmin?'全站图片':'我的图片'}</div><div class="num">${isAdmin?allCount:myCount}</div>${isAdmin?`<div class="sub">我的 ${myCount} 张</div>`:''}</div>
+      <div class="stat"><div class="label">账号状态</div><div class="num" style="font-size:15px;padding-top:6px">${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">待验证</span>'}</div></div>
+      <div class="stat"><div class="label">角色</div><div class="num" style="font-size:15px;padding-top:6px">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</div></div>`;
+    if(!recent.length){ $('#recentBody').innerHTML = '<tr><td colspan="4" class="empty">暂无图片</td></tr>'; }
+    else {
+      $('#recentBody').innerHTML = recent.map(it => `<tr>
+        <td><img class="thumb" src="${it.url}" loading="lazy"></td>
+        <td><span class="mono">${escapeHtml(it.original_name||it.key)}</span></td>
+        <td>${fmtSize(it.size)}</td>
+        <td class="muted">${fmtDate(it.created_at)}</td></tr>`).join('');
+    }
+  }catch(e){ $('#statsBox').innerHTML = `<div class="stat"><div class="label">加载失败</div></div>`; }
+}
+
+/* ===== 上传 ===== */
+function renderUpload(c){
+  const canUpload = me.email_verified;
+  c.innerHTML = `
+    ${!canUpload ? '<div class="banner banner-warn">⚠️ 邮箱未验证，上传已禁用。<button class="btn btn-sm" id="upResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    <div class="card">
+      <div class="card-title">上传图片</div>
+      <div class="drop ${canUpload?'':'disabled'}" id="drop">
+        <div class="big">⬆</div>
+        <div class="t1">${canUpload?'拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴':'邮箱未验证，上传已禁用'}</div>
+        <div class="t2">支持 jpg / png / gif / webp / bmp</div>
+        <input id="fileInput" type="file" accept="image/*" multiple hidden>
+      </div>
+      <div class="upload-results" id="results"></div>
+    </div>`;
+  if(!canUpload){ $('#upResend').addEventListener('click', async () => { try{ await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发','ok'); }catch(e){ toast(e.message,'bad'); } }); return; }
+  const drop = $('#drop'), fileInput = $('#fileInput');
+  drop.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { if(fileInput.files.length) uploadFiles(fileInput.files); fileInput.value=''; });
+  ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) uploadFiles(ev.dataTransfer.files); });
+  window.addEventListener('paste', onPaste);
+}
+function onPaste(ev){ if(curView!=='upload' || !me || !me.email_verified) return; const fs=[]; for(const it of ev.clipboardData.items){ if(it.kind==='file'){ const f=it.getAsFile(); if(f) fs.push(f); } } if(fs.length) uploadFiles(fs); }
+function uploadFiles(files){ if(!me||!me.email_verified){ toast('请先验证邮箱','bad'); return; } Array.from(files).forEach(uploadOne); }
 function uploadOne(file){
   const fd = new FormData(); fd.append('file', file);
-  const card = document.createElement('div'); card.className='item';
-  card.innerHTML = `<img><div class="meta"><div class="name">上传中: ${escapeHtml(file.name)}</div><div class="links"><span class="chip">...</span></div></div>`;
+  const card = document.createElement('div'); card.className='upload-item';
+  card.innerHTML = `<img><div class="meta"><div class="name">上传中: ${escapeHtml(file.name)}</div><div class="links"><span class="chip">…</span></div></div>`;
   $('#results').prepend(card);
   card.querySelector('img').src = URL.createObjectURL(file);
-  fetch('/upload', { method:'POST', headers:{'Authorization':'Bearer '+me.api_token}, body: fd })
+  fetch('/upload',{method:'POST',headers:{'Authorization':'Bearer '+me.api_token},body:fd})
     .then(async r => { const text = await r.text(); if(!r.ok) throw new Error(text); return text; })
-    .then(text => { let url, j; try { j=JSON.parse(text); url=j.url; } catch { url=text; j={url}; }
-      card.querySelector('.meta .name').innerHTML = escapeHtml(file.name) + (j.duplicated?'<span class="tag">去重</span>':'');
+    .then(text => { let url, j; try{j=JSON.parse(text);url=j.url;}catch{url=text;j={url};}
+      card.querySelector('.name').innerHTML = escapeHtml(file.name) + (j.duplicated?'<span class="tag-dedup">去重</span>':'');
       const box = card.querySelector('.links'); box.innerHTML='';
-      [['URL',j.url],['Markdown',j.markdown],['HTML',j.html],['BBCode',j.bbcode]].filter(([,v])=>v).forEach(([l,v])=>{ const c=document.createElement('span'); c.className='chip'+(l==='URL'?' url':''); c.textContent=l; c.addEventListener('click',()=>copy(v)); box.appendChild(c); });
-      loadImages(); if(me.role==='admin' && adminFilter==='all') loadAdminImages();
+      [['URL',j.url],['MD',j.markdown],['HTML',j.html],['BB',j.bbcode]].filter(([,v])=>v).forEach(([l,v])=>{ const c=document.createElement('span'); c.className='chip'+(l==='URL'?' chip-url':''); c.textContent=l; c.addEventListener('click',()=>copy(v)); box.appendChild(c); });
     })
-    .catch(err => { card.querySelector('.meta .name').textContent = '失败: '+(err.message||'未知错误'); card.style.opacity=.6; });
+    .catch(err => { card.querySelector('.name').textContent = '失败: '+(err.message||'未知错误'); card.style.opacity=.5; });
 }
 
-// ===== 我的图片 =====
+/* ===== 我的图片 ===== */
+async function renderImages(c){
+  c.innerHTML = `<div class="card"><div class="card-title">我的图片<span class="sub" id="imgCount"></span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>文件名 / Key</th><th>大小</th><th>尺寸</th><th>时间</th><th>操作</th></tr></thead><tbody id="tbody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table></div>
+    <div class="pager" id="pager"></div></div>`;
+  await loadImages();
+}
 async function loadImages(){
-  try { const data = await api(`/api/images?page=${page}&size=${pageSize}`); total = data.total; renderTable(data.items, $('#tbody'), false); renderPager(); }
-  catch(e) { $('#tbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
-}
-function renderTable(items, tbody, isAdmin){
-  tbody.innerHTML = '';
-  if(!items.length){ tbody.innerHTML = `<tr><td colspan="${isAdmin?6:6}" class="empty">暂无图片</td></tr>`; return; }
-  items.forEach(it => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><img src="${it.url}" loading="lazy"></td>
-      <td><span class="k" title="${escapeHtml(it.original_name||'')}">${escapeHtml(it.original_name||it.key)}</span>${isAdmin?'<br><span class="sub" style="font-size:11px;color:#999;">'+escapeHtml(it.key)+'</span>':''}</td>
-      ${isAdmin?`<td>${it.user_id==null?'<span class="sub">无主</span>':'#'+it.user_id}</td>`:''}
+  try{
+    const data = await api(`/api/images?page=${page}&size=${pageSize}`);
+    total = data.total;
+    $('#imgCount').textContent = `共 ${total} 张`;
+    const tb = $('#tbody');
+    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">暂无图片</td></tr>'; renderPager(); return; }
+    tb.innerHTML = data.items.map(it => `<tr>
+      <td><img class="thumb" src="${it.url}" loading="lazy"></td>
+      <td><span class="mono">${escapeHtml(it.original_name||it.key)}</span><br><span class="muted" style="font-size:11px">${escapeHtml(it.key)}</span></td>
       <td>${fmtSize(it.size)}</td>
-      <td>${it.width&&it.height?it.width+'×'+it.height:'-'}</td>
-      <td>${fmtDate(it.created_at)}</td>
-      <td><span class="del" data-id="${it.id}">删除</span></td>`;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll('.del').forEach(el => el.addEventListener('click', () => delImage(el.dataset.id, isAdmin)));
-}
-async function delImage(id, isAdmin){
-  if(!confirm('确认删除？将同时删除 R2 中的对象。')) return;
-  try { await api(`/api/images/${id}`,{method:'DELETE'}); toast('已删除'); if(isAdmin) loadAdminImages(); else loadImages(); }
-  catch(e){ toast('删除失败: '+e.message); }
+      <td class="muted">${it.width&&it.height?it.width+'×'+it.height:'-'}</td>
+      <td class="muted">${fmtDate(it.created_at)}</td>
+      <td><button class="btn btn-sm btn-danger" data-del="${it.id}">删除</button></td></tr>`).join('');
+    tb.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+      confirmBox('删除图片','确认删除该图片？将同时删除 R2 中的对象，不可恢复。', async () => {
+        try{ await api(`/api/images/${b.dataset.del}`,{method:'DELETE'}); toast('已删除','ok'); loadImages(); }catch(e){ toast(e.message,'bad'); }
+      }, true);
+    }));
+    renderPager();
+  }catch(e){ $('#tbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
 }
 function renderPager(){
   const pages = Math.max(1, Math.ceil(total/pageSize)); const box = $('#pager'); box.innerHTML='';
   if(pages<=1) return;
-  const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'+(d?'':' ghost'); b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{page=p;loadImages();}); return b; };
-  box.appendChild(mk('上一页',page-1,page<=1));
-  box.appendChild(Object.assign(document.createElement('span'),{textContent:`${page} / ${pages}`,style:'font-size:13px;'}));
-  box.appendChild(mk('下一页',page+1,page>=pages));
+  const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{page=p;loadImages();}); return b; };
+  box.appendChild(mk('‹',page-1,page<=1));
+  const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--text-2)'; sp.textContent=`${page} / ${pages}`; box.appendChild(sp);
+  box.appendChild(mk('›',page+1,page>=pages));
 }
 
-// ===== 账户 =====
-$('#btnCopyToken').addEventListener('click', () => copy(me.api_token));
-$('#btnRegenToken').addEventListener('click', async () => {
-  if(!confirm('重置后旧 API Token 立即失效，确认？')) return;
-  try { const j = await api('/api/account/regenerate-token',{method:'POST'}); me.api_token = j.api_token; $('#apiToken').value = j.api_token; toast('已重置'); }
-  catch(e){ toast(e.message); }
-});
-$('#btnChangePass').addEventListener('click', async () => {
-  try { await api('/api/account/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oldPassword:$('#oldPass').value,newPassword:$('#newPass').value})}); toast('密码已修改'); $('#oldPass').value=''; $('#newPass').value=''; }
-  catch(e){ toast(e.message); }
-});
-$('#btnChangeEmail').addEventListener('click', async () => {
-  try { await api('/api/account/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newEmail:$('#accEmail').value.trim()})}); toast('验证邮件已发送到新邮箱'); }
-  catch(e){ toast(e.message); }
-});
-
-// ===== 管理员 =====
-async function loadUsers(){
-  try { const j = await api('/api/admin/users'); renderUsers(j.items); }
-  catch(e){ $('#userTbody').innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+/* ===== 账户（只读 + 模态框编辑） ===== */
+function renderAccount(c){
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">账户信息</div>
+      <div class="info-row"><div class="left"><span class="label">用户名</span><span class="value">${escapeHtml(me.username)}</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">角色</span><span class="value">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">邮箱</span><span class="value">${me.email?escapeHtml(maskEmail(me.email)):'<span class="muted">未设置</span>'} ${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">未验证</span>'}</span></div><div class="right"><button class="btn btn-sm" id="btnEditEmail">修改邮箱</button>${!me.email_verified?'<button class="btn btn-sm" id="btnResend2">重发验证</button>':''}</div></div>
+      <div class="info-row"><div class="left"><span class="label">API Token</span><span class="value mono" id="tokenVal">${maskToken(me.api_token)}</span></div><div class="right"><button class="btn btn-sm" id="btnShowToken">显示</button><button class="btn btn-sm" id="btnCopyToken">复制</button><button class="btn btn-sm btn-danger" id="btnResetToken">重置</button></div></div>
+      <div class="info-row"><div class="left"><span class="label">密码</span><span class="value muted">••••••••</span></div><div class="right"><button class="btn btn-sm" id="btnEditPass">修改密码</button></div></div>
+    </div>`;
+  $('#btnEditEmail').addEventListener('click', modalEditEmail);
+  if(!me.email_verified) $('#btnResend2').addEventListener('click', async () => { try{ await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发','ok'); }catch(e){ toast(e.message,'bad'); } });
+  $('#btnShowToken').addEventListener('click', () => { const v=$('#btnShowToken'); const row=$('#tokenVal'); if(row.dataset.full){ row.textContent=maskToken(me.api_token); row.removeAttribute('data-full'); v.textContent='显示'; }else{ row.textContent=me.api_token; row.dataset.full='1'; v.textContent='隐藏'; } });
+  $('#btnCopyToken').addEventListener('click', () => copy(me.api_token));
+  $('#btnResetToken').addEventListener('click', () => confirmBox('重置 API Token','重置后旧 Token 立即失效，所有使用旧 Token 的客户端需更新。确认重置？', async () => { try{ const j=await api('/api/account/regenerate-token',{method:'POST'}); me.api_token=j.api_token; renderAccount($('#content')); toast('已重置','ok'); }catch(e){ toast(e.message,'bad'); } }, true));
+  $('#btnEditPass').addEventListener('click', modalEditPass);
 }
-function renderUsers(items){
-  const tb = $('#userTbody'); tb.innerHTML='';
-  if(!items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无用户</td></tr>'; return; }
-  items.forEach(u => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.username)} ${u.id===me.id?'<span class="sub">(你)</span>':''}</td>
-      <td>${escapeHtml(u.email||'-')}</td>
-      <td>${u.role==='admin'?'<span class="pill admin">管理员</span>':'用户'}</td>
-      <td>${u.email_verified?'<span class="ok">是</span>':'<span class="bad">否</span>'}</td>
-      <td>${u.image_count}</td><td>${fmtDate(u.created_at)}</td>
-      <td>
-        ${!u.email_verified?'<span class="chip" data-act="verify" data-id="'+u.id+'">验证</span>':''}
-        <span class="del" data-act="del" data-id="${u.id}">删除</span>
-        <span class="chip" data-act="reset" data-id="${u.id}">重置Token</span>
-        <span class="chip" data-act="pwd" data-id="${u.id}">改密码</span>
-      </td>`;
-    tb.appendChild(tr);
+function modalEditEmail(){
+  openModal('修改邮箱',
+    `<div class="field"><label>新邮箱</label><input id="mEmail" type="email" value="${escapeHtml(me.email||'')}" /></div>
+     <div class="field"><p style="font-size:12px;color:var(--text-3);line-height:1.5;margin:0">修改后需重新验证，验证前旧邮箱仍可用。</p></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">发送验证邮件</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    const e = $('#mEmail').value.trim();
+    try{ await api('/api/account/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newEmail:e})}); closeModal(); toast('验证邮件已发送到新邮箱','ok'); me.email = e; me.email_verified = false; renderAccount($('#content')); }
+    catch(err){ toast(err.message,'bad'); }
   });
-  tb.querySelectorAll('[data-act]').forEach(el => el.addEventListener('click', () => userAction(el.dataset.act, el.dataset.id)));
 }
-async function userAction(act, id){
-  if(id==String(me.id) && act==='del'){ toast('不能删除自己'); return; }
-  if(act==='del'){ if(!confirm('删除用户？其图片将转为无主，不连带删除。')) return; try { await api(`/api/admin/users/${id}`,{method:'DELETE'}); toast('已删除'); loadUsers(); } catch(e){ toast(e.message); } }
-  else if(act==='reset'){ if(!confirm('重置该用户 API Token？')) return; try { await api(`/api/admin/users/${id}/reset-token`,{method:'POST'}); toast('已重置'); loadUsers(); } catch(e){ toast(e.message); } }
-  else if(act==='verify'){ if(!confirm('手动标记该用户邮箱已验证？')) return; try { await api(`/api/admin/users/${id}/verify`,{method:'POST'}); toast('已验证'); loadUsers(); } catch(e){ toast(e.message); } }
-  else if(act==='pwd'){ const np = prompt('输入新密码（至少8位）'); if(!np) return; try { await api(`/api/admin/users/${id}/password`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword:np})}); toast('已修改'); } catch(e){ toast(e.message); } }
+function modalEditPass(){
+  openModal('修改密码',
+    `<div class="field"><label>旧密码</label><input id="mOldPass" type="password" autocomplete="current-password" /></div>
+     <div class="field"><label>新密码</label><input id="mNewPass" type="password" placeholder="至少 8 位" autocomplete="new-password" /><div class="hint">至少 8 个字符</div></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">确认修改</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await api('/api/account/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oldPassword:$('#mOldPass').value,newPassword:$('#mNewPass').value})}); closeModal(); toast('密码已修改','ok'); }
+    catch(err){ toast(err.message,'bad'); }
+  });
 }
-$('#btnCreateUser').addEventListener('click', async () => {
-  try { await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#newUser').value.trim(),email:$('#newUserEmail').value.trim()||undefined,password:$('#newUserPass').value,role:$('#newUserRole').value})}); toast('已创建'); $('#newUser').value=''; $('#newUserEmail').value=''; $('#newUserPass').value=''; loadUsers(); }
-  catch(e){ toast(e.message); }
-});
 
-// 管理员图片
-$('#adminFilter').addEventListener('change', e => { adminFilter = e.target.value; adminPage=1; loadAdminImages(); });
-$('#btnAdminRefresh').addEventListener('click', loadAdminImages);
+/* ===== 管理后台 ===== */
+function renderAdmin(c){
+  c.innerHTML = `
+    <div class="stats" id="adminStats"><div class="stat"><div class="label">加载中…</div></div></div>
+    <div class="card">
+      <div class="card-title">用户管理<span class="sub"><button class="btn btn-sm btn-primary" id="btnNewUser">+ 新建用户</button></span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>验证</th><th>图片</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="userTbody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">全部图片<span class="sub"><select id="adminFilter" style="padding:5px 9px;border:1px solid var(--border-2);border-radius:6px;font-size:12px;background:var(--card);font-family:inherit"><option value="all">全部</option><option value="mine">仅自己</option><option value="unowned">无主</option></select> <button class="btn btn-sm" id="btnAdminRefresh">刷新</button></span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>Key</th><th>归属</th><th>大小</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminTbody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table></div>
+      <div class="pager" id="adminPager"></div>
+    </div>`;
+  $('#btnNewUser').addEventListener('click', modalNewUser);
+  $('#adminFilter').addEventListener('change', e => { adminFilter=e.target.value; adminPage=1; loadAdminImages(); });
+  $('#btnAdminRefresh').addEventListener('click', loadAdminImages);
+  loadUsers(); loadAdminImages(); loadAdminStats();
+}
+async function loadAdminStats(){
+  try{
+    const users = await api('/api/admin/users');
+    let totalImgs = 0;
+    try{ const a = await api('/api/images?page=1&size=1&all=1'); totalImgs = a.total; }catch{}
+    $('#adminStats').innerHTML = `
+      <div class="stat"><div class="label">用户总数</div><div class="num">${users.items.length}</div></div>
+      <div class="stat"><div class="label">全站图片</div><div class="num">${totalImgs}</div></div>
+      <div class="stat"><div class="label">待验证用户</div><div class="num">${users.items.filter(u=>!u.email_verified).length}</div></div>`;
+  }catch{}
+}
+async function loadUsers(){
+  try{
+    const j = await api('/api/admin/users');
+    const tb = $('#userTbody');
+    if(!j.items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无用户</td></tr>'; return; }
+    tb.innerHTML = j.items.map(u => `<tr>
+      <td class="muted">${u.id}</td>
+      <td style="font-weight:500">${escapeHtml(u.username)}${u.id===me.id?' <span class="muted">(你)</span>':''}</td>
+      <td>${u.email?escapeHtml(maskEmail(u.email)):'<span class="muted">-</span>'}</td>
+      <td>${u.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</td>
+      <td>${u.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">未验证</span>'}</td>
+      <td class="muted">${u.image_count}</td>
+      <td class="muted">${fmtDate(u.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${!u.email_verified?'<button class="btn btn-sm" data-act="verify" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">验证</button>':''}
+          <button class="btn btn-sm" data-act="pwd" data-id="${u.id}" data-name="${escapeHtml(u.username)}">改密码</button>
+          <button class="btn btn-sm" data-act="reset" data-id="${u.id}" data-name="${escapeHtml(u.username)}">重置Token</button>
+          <button class="btn btn-sm btn-danger" data-act="del" data-id="${u.id}" data-name="${escapeHtml(u.username)}"${u.id===me.id?' disabled':''}>删除</button>
+        </div>
+      </td></tr>`).join('');
+    tb.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => userAction(b.dataset.act, b.dataset.id, b.dataset.name)));
+  }catch(e){ $('#userTbody').innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+}
+function userAction(act, id, name){
+  if(act==='del'){ confirmBox('删除用户',`删除用户 <b>${escapeHtml(name)}</b>？其图片将转为无主，不连带删除。`, async () => { try{ await api(`/api/admin/users/${id}`,{method:'DELETE'}); toast('已删除','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }, true); }
+  else if(act==='reset'){ confirmBox('重置 Token',`重置用户 <b>${escapeHtml(name)}</b> 的 API Token？旧 Token 立即失效。`, async () => { try{ await api(`/api/admin/users/${id}/reset-token`,{method:'POST'}); toast('已重置','ok'); }catch(e){ toast(e.message,'bad'); } }); }
+  else if(act==='verify'){ confirmBox('手动验证',`手动标记 <b>${escapeHtml(name)}</b> 的邮箱为已验证？`, async () => { try{ await api(`/api/admin/users/${id}/verify`,{method:'POST'}); toast('已验证','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }); }
+  else if(act==='pwd'){ modalAdminPass(id, name); }
+}
+function modalAdminPass(id, name){
+  openModal(`修改 ${name} 的密码`,
+    `<div class="field"><label>新密码</label><input id="mAdminPass" type="password" placeholder="至少 8 位" /><div class="hint">至少 8 个字符</div></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">确认</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await api(`/api/admin/users/${id}/password`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword:$('#mAdminPass').value})}); closeModal(); toast('已修改','ok'); }catch(e){ toast(e.message,'bad'); }
+  });
+}
+function modalNewUser(){
+  openModal('新建用户',
+    `<div class="field"><label>用户名</label><input id="nuUser" type="text" placeholder="3-32 位字母数字下划线" /></div>
+     <div class="field"><label>邮箱（可选）</label><input id="nuEmail" type="email" /></div>
+     <div class="field"><label>密码</label><input id="nuPass" type="password" placeholder="至少 8 位" /></div>
+     <div class="field"><label>角色</label><select id="nuRole"><option value="user">普通用户</option><option value="admin">管理员</option></select></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">创建</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#nuUser').value.trim(),email:$('#nuEmail').value.trim()||undefined,password:$('#nuPass').value,role:$('#nuRole').value})}); closeModal(); toast('已创建','ok'); loadUsers(); loadAdminStats(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
 async function loadAdminImages(){
   let q = `page=${adminPage}&size=30&all=1`;
-  if (adminFilter === 'mine') q = `page=${adminPage}&size=30`;
-  else if (adminFilter === 'unowned') q = `page=${adminPage}&size=30&all=1&user_id=null`;
-  try { const data = await api(`/api/images?${q}`); adminTotal = data.total; renderTable(data.items, $('#adminTbody'), true); renderAdminPager(); }
-  catch(e){ $('#adminTbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
-}
-function renderAdminPager(){
-  const pages = Math.max(1, Math.ceil(adminTotal/30)); const box = $('#adminPager'); box.innerHTML='';
-  if(pages<=1) return;
-  const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'+(d?'':' ghost'); b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{adminPage=p;loadAdminImages();}); return b; };
-  box.appendChild(mk('上一页',adminPage-1,adminPage<=1));
-  box.appendChild(Object.assign(document.createElement('span'),{textContent:`${adminPage} / ${pages}`,style:'font-size:13px;'}));
-  box.appendChild(mk('下一页',adminPage+1,adminPage>=pages));
+  if(adminFilter==='mine') q = `page=${adminPage}&size=30`;
+  else if(adminFilter==='unowned') q = `page=${adminPage}&size=30&all=1&user_id=null`;
+  try{
+    const data = await api(`/api/images?${q}`);
+    adminTotal = data.total;
+    const tb = $('#adminTbody');
+    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">暂无图片</td></tr>'; }
+    else{
+      tb.innerHTML = data.items.map(it => `<tr>
+        <td><img class="thumb" src="${it.url}" loading="lazy"></td>
+        <td><span class="mono">${escapeHtml(it.key)}</span></td>
+        <td class="muted">${it.user_id==null?'无主':'#'+it.user_id}</td>
+        <td>${fmtSize(it.size)}</td>
+        <td class="muted">${fmtDate(it.created_at)}</td>
+        <td><button class="btn btn-sm btn-danger" data-del="${it.id}">删除</button></td></tr>`).join('');
+      tb.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => confirmBox('删除图片','确认删除该图片？将同时删除 R2 中的对象。', async () => { try{ await api(`/api/images/${b.dataset.del}`,{method:'DELETE'}); toast('已删除','ok'); loadAdminImages(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }, true)));
+    }
+    const pages = Math.max(1, Math.ceil(adminTotal/30)); const box = $('#adminPager'); box.innerHTML='';
+    if(pages<=1) return;
+    const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{adminPage=p;loadAdminImages();}); return b; };
+    box.appendChild(mk('‹',adminPage-1,adminPage<=1));
+    const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--text-2)'; sp.textContent=`${adminPage} / ${pages}`; box.appendChild(sp);
+    box.appendChild(mk('›',adminPage+1,adminPage>=pages));
+  }catch(e){ $('#adminTbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
 }
 
-// 启动
-(async () => { if (await loadMe()) showApp(); else showAuth(); })();
+/* ===== 启动 ===== */
+(async () => { if(await loadMe()) enterApp(); else { $('#authView').classList.remove('hidden'); $('#appView').classList.add('hidden'); } })();
 </script>
 </body>
 </html>

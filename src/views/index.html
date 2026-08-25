@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>烧饼图床</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #222; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 20px; margin: 0; }
+  header .sub { color: #888; font-size: 13px; }
+  .settings { background: #fff; border: 1px solid #e6e8eb; border-radius: 10px; padding: 12px 14px; margin: 14px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .settings label { font-size: 13px; color: #555; }
+  .settings input[type="password"] { flex: 1; min-width: 180px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .btn { padding: 8px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; font-size: 13px; cursor: pointer; }
+  .btn.ghost { background: #eef1f4; color: #333; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .drop { border: 2px dashed #cfd3d8; border-radius: 10px; background: #fff; padding: 36px 16px; text-align: center; color: #888; cursor: pointer; transition: .15s; }
+  .drop.drag { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+  .drop p { margin: 6px 0; }
+  .results { margin-top: 18px; display: grid; gap: 12px; }
+  .item { background: #fff; border: 1px solid #e6e8eb; border-radius: 10px; padding: 12px; display: flex; gap: 14px; align-items: center; }
+  .item img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: #f0f0f0; flex-shrink: 0; }
+  .item .meta { flex: 1; min-width: 0; }
+  .item .meta .name { font-size: 13px; word-break: break-all; }
+  .item .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { font-size: 12px; padding: 3px 8px; border-radius: 5px; background: #eef1f4; color: #333; cursor: pointer; user-select: none; }
+  .chip:hover { background: #e2e7ee; }
+  .chip.url { background: #e7f0ff; color: #2563eb; }
+  .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #fff3cd; color: #8a6d3b; margin-left: 6px; }
+  .list { margin-top: 28px; }
+  .list h2 { font-size: 16px; margin: 0 0 12px; }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e6e8eb; }
+  th, td { padding: 9px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f1f3; }
+  th { background: #fafbfc; color: #666; font-weight: 600; }
+  td img { width: 48px; height: 48px; object-fit: cover; border-radius: 5px; }
+  td .k { word-break: break-all; max-width: 220px; display: inline-block; }
+  .del { color: #dc2626; cursor: pointer; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px; opacity: 0; transition: .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .empty { color: #999; text-align: center; padding: 20px; }
+  a { color: #2563eb; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>烧饼图床 <span class="sub">/ sbimg · Cloudflare R2</span></h1>
+    </div>
+  </header>
+
+  <div class="settings">
+    <label for="token">管理 Token</label>
+    <input id="token" type="password" placeholder="粘贴你的 ADMIN_TOKEN" />
+    <button class="btn ghost" id="saveToken">保存</button>
+    <span class="sub" id="tokenHint" style="font-size:12px;color:#888;"></span>
+  </div>
+
+  <div class="drop" id="drop">
+    <p>拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴</p>
+    <p class="sub" style="font-size:12px;">支持 jpg/png/gif/webp/bmp/svg，单文件上限见服务端配置</p>
+    <input id="fileInput" type="file" accept="image/*" multiple hidden />
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <div class="list">
+    <h2>已上传图片</h2>
+    <table>
+      <thead>
+        <tr><th>预览</th><th>文件名 / Key</th><th>大小</th><th>尺寸</th><th>时间</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="pager" id="pager"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const tokenKey = 'sbimg_token';
+let TOKEN = localStorage.getItem(tokenKey) || '';
+if (TOKEN) { $('#token').value = TOKEN; $('#tokenHint').textContent = '已从本地加载'; }
+
+let page = 1, pageSize = 30, total = 0;
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+async function copy(text){
+  try { await navigator.clipboard.writeText(text); toast('已复制'); }
+  catch { toast('复制失败'); }
+}
+$('#saveToken').addEventListener('click', () => {
+  TOKEN = $('#token').value.trim();
+  localStorage.setItem(tokenKey, TOKEN);
+  $('#tokenHint').textContent = '已保存';
+  loadList();
+});
+
+const drop = $('#drop');
+const fileInput = $('#fileInput');
+drop.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => { if (fileInput.files.length) uploadFiles(fileInput.files); fileInput.value=''; });
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) uploadFiles(ev.dataTransfer.files); });
+window.addEventListener('paste', ev => {
+  const files = [];
+  for (const it of ev.clipboardData.items) {
+    if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
+  }
+  if (files.length) uploadFiles(files);
+});
+
+function uploadFiles(files){
+  if (!TOKEN) { toast('请先填写并保存 Token'); return; }
+  Array.from(files).forEach(uploadOne);
+}
+function uploadOne(file){
+  const fd = new FormData();
+  fd.append('file', file);
+  const card = document.createElement('div');
+  card.className = 'item';
+  card.innerHTML = `<img id="prev"><div class="meta"><div class="name">上传中: ${escapeHtml(file.name)}</div><div class="links"><span class="chip">...</span></div></div>`;
+  $('#results').prepend(card);
+  const imgEl = card.querySelector('img');
+  imgEl.src = URL.createObjectURL(file);
+  fetch('/upload?token=' + encodeURIComponent(TOKEN), { method:'POST', body: fd })
+    .then(async r => { const text = await r.text(); if (!r.ok) throw new Error(text); return text; })
+    .then(text => {
+      let url, links;
+      try {
+        const j = JSON.parse(text);
+        url = j.url; links = j;
+      } catch {
+        url = text; links = { url };
+      }
+      card.querySelector('.meta .name').innerHTML = escapeHtml(file.name) + (links.duplicated ? '<span class="tag">去重</span>' : '');
+      const linksBox = card.querySelector('.links');
+      linksBox.innerHTML = '';
+      const chips = [
+        ['URL', links.url], ['Markdown', links.markdown], ['HTML', links.html], ['BBCode', links.bbcode]
+      ].filter(([,v]) => v);
+      for (const [label, val] of chips) {
+        const c = document.createElement('span');
+        c.className = 'chip' + (label === 'URL' ? ' url' : '');
+        c.textContent = label;
+        c.addEventListener('click', () => copy(val));
+        linksBox.appendChild(c);
+      }
+      loadList();
+    })
+    .catch(err => {
+      card.querySelector('.meta .name').textContent = '失败: ' + (err.message || '未知错误');
+      card.style.opacity = .6;
+    });
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function fmtSize(n){
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  return (n/1048576).toFixed(2) + ' MB';
+}
+function fmtDate(d){
+  const dt = new Date(d); return dt.toLocaleString('zh-CN', { hour12: false });
+}
+
+async function loadList(){
+  if (!TOKEN) { $('#tbody').innerHTML = '<tr><td colspan="6" class="empty">填写 Token 后查看列表</td></tr>'; return; }
+  const res = await fetch(`/api/images?page=${page}&size=${pageSize}&token=${encodeURIComponent(TOKEN)}`);
+  if (!res.ok) { $('#tbody').innerHTML = '<tr><td colspan="6" class="empty">加载失败: '+ escapeHtml(await res.text()) +'</td></tr>'; return; }
+  const data = await res.json();
+  total = data.total;
+  const tb = $('#tbody');
+  tb.innerHTML = '';
+  if (!data.items.length) { tb.innerHTML = '<tr><td colspan="6" class="empty">暂无图片</td></tr>'; }
+  for (const it of data.items) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><img src="${it.url}" loading="lazy"></td>
+      <td><span class="k" title="${escapeHtml(it.original_name||'')}">${escapeHtml(it.original_name||it.key)}</span><br><span class="sub" style="font-size:11px;color:#999;">${escapeHtml(it.key)}</span></td>
+      <td>${fmtSize(it.size)}</td>
+      <td>${it.width&&it.height ? it.width+'×'+it.height : '-'}</td>
+      <td>${fmtDate(it.created_at)}</td>
+      <td><span class="del" data-id="${it.id}">删除</span></td>`;
+    tb.appendChild(tr);
+  }
+  tb.querySelectorAll('.del').forEach(el => el.addEventListener('click', () => delOne(el.dataset.id)));
+  renderPager();
+}
+async function delOne(id){
+  if (!confirm('确认删除该图片？将同时删除 R2 中的对象。')) return;
+  const res = await fetch(`/api/images/${id}?token=${encodeURIComponent(TOKEN)}`, { method: 'DELETE' });
+  if (res.ok) { toast('已删除'); loadList(); } else { toast('删除失败'); }
+}
+function renderPager(){
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const box = $('#pager');
+  box.innerHTML = '';
+  if (pages <= 1) return;
+  const mk = (label, p, disabled, active) => {
+    const b = document.createElement('button');
+    b.className = 'btn' + (active ? '' : ' ghost');
+    b.textContent = label; b.disabled = !!disabled;
+    b.addEventListener('click', () => { page = p; loadList(); });
+    return b;
+  };
+  box.appendChild(mk('上一页', page-1, page<=1, false));
+  box.appendChild(Object.assign(document.createElement('span'), {textContent:`${page} / ${pages}`, style:'font-size:13px;'}));
+  box.appendChild(mk('下一页', page+1, page>=pages, false));
+}
+loadList();
+</script>
+</body>
+</html>

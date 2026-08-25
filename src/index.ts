@@ -7,6 +7,8 @@ import { migrate } from './db/migrate';
 import { ensureInitialAdmin } from './services/auth';
 import { notFound, errorHandler } from './middleware/errorHandler';
 import { attachSessionUser } from './middleware/auth';
+import { globalLimiter } from './middleware/rateLimit';
+import { securityHeaders, noStoreOnError } from './middleware/securityHeaders';
 import pageRouter from './routes/page';
 import viewRouter from './routes/view';
 import uploadRouter from './routes/upload';
@@ -23,6 +25,13 @@ async function main(): Promise<void> {
 
   // 信任反代：按部署层级配置，使 req.ip 取真实客户端 IP
   app.set('trust proxy', config.session.trustProxy);
+
+  // 安全头（防点击劫持、类型嗅探等）
+  app.use(securityHeaders);
+  // 全局限流（按 IP，防扫描）
+  app.use(globalLimiter);
+  // 错误响应不缓存
+  app.use(noStoreOnError);
 
   app.use(express.json());
 

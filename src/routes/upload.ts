@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { requireApiToken } from '../middleware/auth';
-import { uploadRateLimiter } from '../middleware/rateLimit';
+import { uploadRateLimiter, uploadUserLimiter } from '../middleware/rateLimit';
+import { uploadConcurrency } from '../middleware/concurrency';
 import { config } from '../config';
 import { uploadImage, buildLinks, UploadError } from '../services/upload';
 
@@ -34,6 +35,11 @@ const fieldsHandler = upload.fields([
 ]);
 
 async function handleUpload(req: Request, res: Response): Promise<void> {
+  // 未验证邮箱用户不能上传（需邮箱激活后使用）
+  if (!req.user!.email_verified) {
+    res.status(403).json({ error: '邮箱未验证，请先激活邮箱后再上传' });
+    return;
+  }
   const file = pickFile(req);
   if (!file) {
     res.status(400).json({ error: '未检测到上传文件，字段名应为 file 或 image' });
@@ -71,10 +77,18 @@ async function handleUpload(req: Request, res: Response): Promise<void> {
   }
 }
 
-// 多端点兼容：API token 鉴权 + 频率限制 + 字段解析
+// 多端点兼容：API token 鉴权 + 频率限制 + 并发控制 + 字段解析
 const endpoints = ['/upload', '/api/upload', '/api/v1/upload'];
 for (const path of endpoints) {
-  router.post(path, requireApiToken, uploadRateLimiter, fieldsHandler, handleUpload);
+  router.post(
+    path,
+    requireApiToken,
+    uploadRateLimiter,
+    uploadUserLimiter,
+    uploadConcurrency,
+    fieldsHandler,
+    handleUpload,
+  );
 }
 
 export default router;

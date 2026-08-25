@@ -7,7 +7,7 @@
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #222; }
-  .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 60px; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
   header h1 { font-size: 20px; margin: 0; }
   header .sub { color: #888; font-size: 13px; }
@@ -22,8 +22,8 @@
   .card h2 { font-size: 15px; margin: 0 0 12px; }
   .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
   .row label { font-size: 13px; color: #555; min-width: 80px; }
-  input[type="text"], input[type="password"], input[type="number"] { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-  textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: monospace; }
+  input[type="text"], input[type="password"], input[type="email"], input[type="number"], select { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .banner { background: #fff8e1; border: 1px solid #ffe082; color: #8a6d3b; padding: 10px 14px; border-radius: 8px; margin: 12px 0; font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .drop { border: 2px dashed #cfd3d8; border-radius: 10px; padding: 30px 16px; text-align: center; color: #888; cursor: pointer; transition: .15s; }
   .drop.drag { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
   .results { margin-top: 16px; display: grid; gap: 12px; }
@@ -36,6 +36,7 @@
   .chip:hover { background: #e2e7ee; }
   .chip.url { background: #e7f0ff; color: #2563eb; }
   .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #fff3cd; color: #8a6d3b; margin-left: 6px; }
+  .ok { color: #16a34a; } .bad { color: #dc2626; }
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e6e8eb; }
   th, td { padding: 9px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f1f3; }
   th { background: #fafbfc; color: #666; font-weight: 600; }
@@ -51,7 +52,9 @@
   .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
   .tab { padding: 8px 14px; border: 1px solid #e6e8eb; border-radius: 6px 6px 0 0; background: #fafbfc; cursor: pointer; font-size: 13px; }
   .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
-  .mono { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
+  .turnstile-wrap { margin: 8px 0; min-height: 65px; }
+  code { background: #eef1f4; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  @media (max-width: 640px) { .wrap { padding: 14px 10px 40px; } header h1 { font-size: 18px; } .row label { min-width: 64px; } }
 </style>
 </head>
 <body>
@@ -61,9 +64,15 @@
     <div class="topbar" id="topbar"></div>
   </header>
 
+  <!-- 未验证横幅 -->
+  <div class="banner hidden" id="verifyBanner">
+    <span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证，或</span>
+    <button class="btn ghost" id="btnResend" style="padding:5px 10px;">重发验证邮件</button>
+  </div>
+
   <!-- 登录/注册视图 -->
   <div id="authView" class="hidden">
-    <div class="card" style="max-width:360px;margin:40px auto;">
+    <div class="card" style="max-width:380px;margin:40px auto;">
       <div class="tabs">
         <div class="tab active" data-tab="login" id="tabLogin">登录</div>
         <div class="tab" data-tab="register" id="tabRegister">注册</div>
@@ -75,8 +84,11 @@
       </div>
       <div id="registerBox" class="hidden">
         <div class="row"><label>用户名</label><input id="regUser" type="text" placeholder="3-32位字母数字下划线" /></div>
+        <div class="row"><label>邮箱</label><input id="regEmail" type="email" placeholder="用于验证激活" /></div>
         <div class="row"><label>密码</label><input id="regPass" type="password" placeholder="至少8位" /></div>
+        <div class="turnstile-wrap" id="turnstileWrap"></div>
         <div class="row" style="justify-content:flex-end;"><button class="btn" id="btnRegister">注册</button></div>
+        <p class="sub" style="font-size:12px;margin:6px 0 0;">注册后需点击邮件中的链接激活邮箱才能上传。</p>
       </div>
       <div id="authMsg" style="color:#dc2626;font-size:13px;margin-top:6px;"></div>
     </div>
@@ -105,6 +117,8 @@
 
     <div class="card">
       <h2>账户</h2>
+      <div class="row"><label>邮箱</label><input id="accEmail" type="email" /> <span id="emailStatus" style="font-size:12px;"></span></div>
+      <div class="row" style="justify-content:flex-end;"><button class="btn ghost" id="btnChangeEmail">修改邮箱(需重新验证)</button></div>
       <div class="row"><label>API Token</label><input id="apiToken" type="text" readonly /> <button class="btn ghost" id="btnCopyToken">复制</button> <button class="btn ghost" id="btnRegenToken">重置</button></div>
       <p class="sub" style="font-size:12px;margin:0 0 10px;">上传 API 用此 Token（Header: <code>Authorization: Bearer &lt;token&gt;</code>）。重置后旧 Token 立即失效。</p>
       <div class="row"><label>旧密码</label><input id="oldPass" type="password" /></div>
@@ -117,11 +131,12 @@
       <div class="card">
         <h2>用户管理（管理员）</h2>
         <table>
-          <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>图片数</th><th>创建时间</th><th>操作</th></tr></thead>
+          <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>验证</th><th>图片数</th><th>创建时间</th><th>操作</th></tr></thead>
           <tbody id="userTbody"></tbody>
         </table>
         <h3 style="font-size:14px;margin:16px 0 8px;">新建用户</h3>
         <div class="row"><label>用户名</label><input id="newUser" type="text" /></div>
+        <div class="row"><label>邮箱</label><input id="newUserEmail" type="email" /></div>
         <div class="row"><label>密码</label><input id="newUserPass" type="password" /></div>
         <div class="row"><label>角色</label>
           <select id="newUserRole"><option value="user">普通用户</option><option value="admin">管理员</option></select>
@@ -153,29 +168,34 @@
 
 <script>
 const $ = (s) => document.querySelector(s);
-let me = null;       // 当前用户
+let me = null, turnstileToken = null, tsWidgetId = null;
 let page = 1, pageSize = 30, total = 0;
 let adminPage = 1, adminTotal = 0, adminFilter = 'all';
 
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1600); }
 async function copy(text){ try { await navigator.clipboard.writeText(text); toast('已复制'); } catch { toast('复制失败'); } }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fmtSize(n){ if(n<1024)return n+' B'; if(n<1048576)return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(2)+' MB'; }
 function fmtDate(d){ return new Date(d).toLocaleString('zh-CN',{hour12:false}); }
-
 async function api(path, opts){ const r = await fetch(path, opts); const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = { raw: t }; } if (!r.ok) throw new Error(j.error || j.raw || ('HTTP '+r.status)); return j; }
 
 // ===== 鉴权 =====
-async function loadMe(){
-  try { me = await api('/api/auth/me'); return true; }
-  catch { return false; }
-}
+async function loadMe(){ try { me = await api('/api/auth/me'); return true; } catch { return false; } }
 function showAuth(){ $('#authView').classList.remove('hidden'); $('#appView').classList.add('hidden'); }
 function showApp(){
   $('#authView').classList.add('hidden'); $('#appView').classList.remove('hidden');
   $('#topbar').innerHTML = `<span class="pill ${me.role==='admin'?'admin':''}">${escapeHtml(me.username)} · ${me.role==='admin'?'管理员':'用户'}</span><button class="btn ghost" id="btnLogout">登出</button>`;
   $('#btnLogout').addEventListener('click', logout);
   $('#apiToken').value = me.api_token;
+  // 邮箱与验证状态
+  $('#accEmail').value = me.email || '';
+  $('#emailStatus').innerHTML = me.email_verified ? '<span class="ok">已验证</span>' : '<span class="bad">未验证</span>';
+  // 未验证横幅
+  if (!me.email_verified) { $('#verifyBanner').classList.remove('hidden'); } else { $('#verifyBanner').classList.add('hidden'); }
+  // 未验证时禁用上传
+  const canUpload = me.email_verified;
+  if (!canUpload) { $('#drop').style.opacity = .5; $('#drop').querySelector('p').textContent = '邮箱未验证，上传已禁用'; }
+  else { $('#drop').style.opacity = 1; $('#drop').querySelector('p').textContent = '拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴'; }
   if (me.role === 'admin') { $('#adminView').classList.remove('hidden'); loadUsers(); loadAdminImages(); }
   else { $('#adminView').classList.add('hidden'); }
   loadImages();
@@ -191,25 +211,50 @@ function switchTab(t){
   $('#loginBox').classList.toggle('hidden', t!=='login');
   $('#registerBox').classList.toggle('hidden', t!=='register');
   $('#authMsg').textContent='';
+  if (t==='register') setupTurnstile();
 }
 $('#btnLogin').addEventListener('click', async () => {
   try { me = await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})}); showApp(); }
   catch(e){ $('#authMsg').textContent = e.message; }
 });
 $('#btnRegister').addEventListener('click', async () => {
-  try { me = await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#regUser').value.trim(),password:$('#regPass').value})}); showApp(); }
-  catch(e){ $('#authMsg').textContent = e.message; }
+  if (!turnstileEnabled && turnstileToken === null) { /* disabled, ok */ }
+  try {
+    me = await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#regUser').value.trim(),email:$('#regEmail').value.trim(),password:$('#regPass').value,turnstileToken})});
+    if (me.verification_sent) { toast('注册成功，请查收邮件激活'); }
+    showApp();
+  } catch(e){ $('#authMsg').textContent = e.message; if (tsWidgetId !== null && window.turnstile) window.turnstile.reset(tsWidgetId); }
 });
+$('#btnResend').addEventListener('click', async () => {
+  try { await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发'); }
+  catch(e){ toast(e.message); }
+});
+
+// ===== Turnstile =====
+let turnstileEnabled = false;
+async function setupTurnstile(){
+  if (tsWidgetId !== null) return; // 已渲染
+  try {
+    const k = await api('/api/auth/turnstile-key');
+    turnstileEnabled = k.enabled;
+    if (!k.enabled) { $('#turnstileWrap').innerHTML = '<span class="sub" style="font-size:12px;">人机验证未启用</span>'; return; }
+    const s = document.createElement('script'); s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTsLoad&render=explicit'; s.async=true; s.defer=true;
+    window.onTsLoad = function(){
+      tsWidgetId = window.turnstile.render('#turnstileWrap', { sitekey: k.siteKey, callback: (t) => { turnstileToken = t; } });
+    };
+    document.body.appendChild(s);
+  } catch { $('#turnstileWrap').innerHTML = '<span class="sub" style="font-size:12px;">人机验证加载失败</span>'; }
+}
 
 // ===== 上传 =====
 const drop = $('#drop'), fileInput = $('#fileInput');
-drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('click', () => { if (me && !me.email_verified) { toast('请先验证邮箱'); return; } fileInput.click(); });
 fileInput.addEventListener('change', () => { if(fileInput.files.length) uploadFiles(fileInput.files); fileInput.value=''; });
 ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
 ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
 drop.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) uploadFiles(ev.dataTransfer.files); });
-window.addEventListener('paste', ev => { const fs=[]; for(const it of ev.clipboardData.items){ if(it.kind==='file'){ const f=it.getAsFile(); if(f) fs.push(f); } } if(fs.length) uploadFiles(fs); });
-function uploadFiles(files){ Array.from(files).forEach(uploadOne); }
+window.addEventListener('paste', ev => { if(!me||!me.email_verified) return; const fs=[]; for(const it of ev.clipboardData.items){ if(it.kind==='file'){ const f=it.getAsFile(); if(f) fs.push(f); } } if(fs.length) uploadFiles(fs); });
+function uploadFiles(files){ if(!me||!me.email_verified){ toast('请先验证邮箱'); return; } Array.from(files).forEach(uploadOne); }
 function uploadOne(file){
   const fd = new FormData(); fd.append('file', file);
   const card = document.createElement('div'); card.className='item';
@@ -229,10 +274,8 @@ function uploadOne(file){
 
 // ===== 我的图片 =====
 async function loadImages(){
-  try {
-    const data = await api(`/api/images?page=${page}&size=${pageSize}`);
-    total = data.total; renderTable(data.items, $('#tbody'), false); renderPager();
-  } catch(e) { $('#tbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+  try { const data = await api(`/api/images?page=${page}&size=${pageSize}`); total = data.total; renderTable(data.items, $('#tbody'), false); renderPager(); }
+  catch(e) { $('#tbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
 }
 function renderTable(items, tbody, isAdmin){
   tbody.innerHTML = '';
@@ -275,21 +318,28 @@ $('#btnChangePass').addEventListener('click', async () => {
   try { await api('/api/account/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oldPassword:$('#oldPass').value,newPassword:$('#newPass').value})}); toast('密码已修改'); $('#oldPass').value=''; $('#newPass').value=''; }
   catch(e){ toast(e.message); }
 });
+$('#btnChangeEmail').addEventListener('click', async () => {
+  try { await api('/api/account/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newEmail:$('#accEmail').value.trim()})}); toast('验证邮件已发送到新邮箱'); }
+  catch(e){ toast(e.message); }
+});
 
 // ===== 管理员 =====
 async function loadUsers(){
   try { const j = await api('/api/admin/users'); renderUsers(j.items); }
-  catch(e){ $('#userTbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+  catch(e){ $('#userTbody').innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(e.message)}</td></tr>`; }
 }
 function renderUsers(items){
   const tb = $('#userTbody'); tb.innerHTML='';
-  if(!items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">暂无用户</td></tr>'; return; }
+  if(!items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无用户</td></tr>'; return; }
   items.forEach(u => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.username)} ${u.id===me.id?'<span class="sub">(你)</span>':''}</td>
+      <td>${escapeHtml(u.email||'-')}</td>
       <td>${u.role==='admin'?'<span class="pill admin">管理员</span>':'用户'}</td>
+      <td>${u.email_verified?'<span class="ok">是</span>':'<span class="bad">否</span>'}</td>
       <td>${u.image_count}</td><td>${fmtDate(u.created_at)}</td>
       <td>
+        ${!u.email_verified?'<span class="chip" data-act="verify" data-id="'+u.id+'">验证</span>':''}
         <span class="del" data-act="del" data-id="${u.id}">删除</span>
         <span class="chip" data-act="reset" data-id="${u.id}">重置Token</span>
         <span class="chip" data-act="pwd" data-id="${u.id}">改密码</span>
@@ -302,10 +352,11 @@ async function userAction(act, id){
   if(id==String(me.id) && act==='del'){ toast('不能删除自己'); return; }
   if(act==='del'){ if(!confirm('删除用户？其图片将转为无主，不连带删除。')) return; try { await api(`/api/admin/users/${id}`,{method:'DELETE'}); toast('已删除'); loadUsers(); } catch(e){ toast(e.message); } }
   else if(act==='reset'){ if(!confirm('重置该用户 API Token？')) return; try { await api(`/api/admin/users/${id}/reset-token`,{method:'POST'}); toast('已重置'); loadUsers(); } catch(e){ toast(e.message); } }
+  else if(act==='verify'){ if(!confirm('手动标记该用户邮箱已验证？')) return; try { await api(`/api/admin/users/${id}/verify`,{method:'POST'}); toast('已验证'); loadUsers(); } catch(e){ toast(e.message); } }
   else if(act==='pwd'){ const np = prompt('输入新密码（至少8位）'); if(!np) return; try { await api(`/api/admin/users/${id}/password`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword:np})}); toast('已修改'); } catch(e){ toast(e.message); } }
 }
 $('#btnCreateUser').addEventListener('click', async () => {
-  try { await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#newUser').value.trim(),password:$('#newUserPass').value,role:$('#newUserRole').value})}); toast('已创建'); $('#newUser').value=''; $('#newUserPass').value=''; loadUsers(); }
+  try { await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#newUser').value.trim(),email:$('#newUserEmail').value.trim()||undefined,password:$('#newUserPass').value,role:$('#newUserRole').value})}); toast('已创建'); $('#newUser').value=''; $('#newUserEmail').value=''; $('#newUserPass').value=''; loadUsers(); }
   catch(e){ toast(e.message); }
 });
 

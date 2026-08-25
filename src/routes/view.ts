@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { getObjectStream, R2Error } from '../r2/client';
+import { viewLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
 // GET /i/*  —— key 可能含 '/'，用通配匹配
-router.get('/i/*', async (req: Request, res: Response) => {
+router.get('/i/*', viewLimiter, async (req: Request, res: Response) => {
   const key = req.params[0];
   if (!key) {
     res.status(404).send('Not Found');

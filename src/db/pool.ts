@@ -32,5 +32,7 @@ export interface UserRow {
   password_hash: string;
   role: 'admin' | 'user';
   api_token: string;
+  email: string | null;
+  email_verified: number;
   created_at: Date;
 }

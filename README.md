@@ -5,19 +5,22 @@
 ## 特性
 
 - **多用户后台**：管理员 + 普通用户两级权限，服务端 session，开放注册（可关）
+- **邮箱验证注册**：注册需填邮箱，收到验证链接激活后才能上传；支持改邮箱后重新验证
+- **Turnstile 人机验证**：注册表单集成 Cloudflare Turnstile，防止机器人批量注册
+- **应用层抗 CC**：分层限流（全局/上传/图片访问/注册/登录）+ 登录失败封禁 + 上传并发控制 + helmet 安全头
 - **安全上传**：magic bytes 真实类型嗅探，伪造类型无法绕过；已移除 SVG 杜绝同源 XSS
 - 拖拽 / 点击 / 剪贴板粘贴上传，多文件批量
 - 哈希去重：相同图片只存一份，重复上传直接返回已有链接
 - URL / Markdown / HTML / BBCode 多格式链接一键复制
 - 图片按用户归属，普通用户只能看/删自己的，管理员可管全部
 - 用户 API token 上传（兼容 PicGo / ShareX / curl），图片公开访问
-- 单文件大小 + 每 IP 上传频率限制，注册频率限制
 - 启动自动建表 + 自动建初始管理员，无需手动迁移
 
 ## 技术栈
 
 Node.js + Express + TypeScript，MySQL（用户/元数据/session），Cloudflare R2（图片存储，S3 兼容 SDK）。
 密码 bcrypt 哈希，session 存 MySQL（express-session + express-mysql-session）。
+邮件用 nodemailer（SMTP，兼容 Brevo 及任意 SMTP 服务商），人机验证用 Cloudflare Turnstile。
 
 ## 目录结构
 
@@ -28,11 +31,11 @@ sbimg/
 │   ├── config.ts           # 环境变量 + zod 校验
 │   ├── db/                 # 连接池 / 建表迁移（幂等加列）
 │   ├── r2/client.ts        # R2 (S3) 封装
-│   ├── middleware/         # session 鉴权 / API token / 频率限制 / 错误处理
-│   ├── services/           # auth(注册登录) / users(用户CRUD) / hash / upload / images
+│   ├── middleware/         # session 鉴权 / API token / 分层限流 / 并发控制 / 安全头 / 错误处理
+│   ├── services/           # auth(注册登录验证) / users(用户CRUD) / hash / upload / images / mail / turnstile
 │   ├── routes/             # auth / account / admin / upload / images / view / page
 │   ├── types/              # 第三方模块类型声明
-│   └── views/index.html   # 管理页面（登录/控制台/管理）
+│   └── views/index.html   # 管理页面（登录/注册/Turnstile/控制台/管理）
 ├── scripts/
 │   ├── copy-assets.js      # 构建后复制静态资源
 │   └── test-upload-flow.js # 集成测试（多用户全流程）
@@ -90,6 +93,18 @@ cp .env.example .env
 | `INIT_ADMIN_USER` `INIT_ADMIN_PASS` | 初始管理员账号；密码留空则启动随机生成并打印到控制台 |
 | `ALLOW_REGISTER` | 是否开放注册，true/false |
 | `REGISTER_LIMIT_PER_10MIN` | 每 IP 每 10 分钟注册次数上限 |
+| `MAIL_ENABLED` | 是否启用邮件（关闭则注册直接创建已验证用户，本地调试用） |
+| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` | SMTP 发信配置（Brevo 用 `smtp-relay.brevo.net:587`） |
+| `APP_URL` | 对外域名，用于生成验证链接（一般与 BASE_URL 相同） |
+| `TURNSTILE_ENABLED` | 是否启用 Turnstile 人机验证（关闭则注册不校验，本地调试用） |
+| `TURNSTILE_SITE_KEY` `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 站点密钥与密钥 |
+| `GLOBAL_LIMIT_PER_MIN` | 全局每 IP 每分钟请求数（防扫描），默认 300 |
+| `UPLOAD_LIMIT_PER_MIN` | 上传每 IP 每分钟次数，默认 100 |
+| `UPLOAD_LIMIT_PER_USER_PER_MIN` | 上传每用户每分钟次数，默认 60 |
+| `VIEW_LIMIT_PER_MIN` | 图片访问 /i/* 每 IP 每分钟次数，默认 600 |
+| `LOGIN_FAIL_THRESHOLD` | 登录连续失败多少次后封禁，默认 5 |
+| `LOGIN_BAN_MINUTES` | 登录封禁分钟数，默认 15 |
+| `UPLOAD_CONCURRENCY` | 同时处理的上传请求数上限（超出返 503），默认 20 |
 
 ### 4. 构建与运行
 
@@ -135,29 +150,49 @@ server {
 ## 认证模型
 
 - **管理后台**：浏览器登录，httpOnly cookie session（7 天）。登录态用于页面操作和图片管理 API。
-- **外部上传**：用各用户的 API Token，放在请求头 `Authorization: Bearer <token>`。Token 在后台「账户」页查看/重置。
+- **外部上传**：用各用户的 API Token，放在请求头 `Authorization: Bearer <token>`。Token 在后台「账户」页查看/重置。**未验证邮箱用户不能上传**。
 - **图片访问**：`GET /i/*` 公开，无需鉴权。
 
-权限：普通用户只能看/删自己上传的图；管理员可看全部、删任意、管理用户。
+权限：普通用户只能看/删自己上传的图；管理员可看全部、删任意、管理用户、手动验证用户邮箱。
+
+### 邮箱验证
+
+- 注册需填邮箱，`MAIL_ENABLED=true` 时创建未验证用户并发验证邮件，用户点链接激活后才能上传
+- `MAIL_ENABLED=false` 时注册直接创建已验证用户（本地调试/应急用）
+- 邮箱唯一性在「激活时」由程序层检查（同一邮箱可有未验证的待激活记录，但只能有一个已验证）
+- 已登录未验证用户可点「重发验证邮件」（限频 10 分钟一次）
+- 管理员可在用户表手动标记已验证（应急）
+- 改邮箱后需重新验证，验证前旧邮箱仍可用
+
+### Turnstile 人机验证
+
+- 仅在注册表单启用，防止机器人批量注册
+- `TURNSTILE_ENABLED=false` 或未填 SITE_KEY 时不渲染 widget、不校验
+- 前端从 `/api/auth/turnstile-key` 获取 site key 决定是否渲染
 
 ## API
 
 ### 鉴权（session）
 
 ```
+GET    /api/auth/turnstile-key           获取 Turnstile site key（enabled + siteKey）
 POST   /api/auth/login     {username, password}   登录，建 session
-POST   /api/auth/register  {username, password}   注册并自动登录（受 ALLOW_REGISTER 开关）
+POST   /api/auth/register  {username, email, password, turnstileToken}  注册（受 ALLOW_REGISTER + Turnstile + 邮箱验证）
+GET    /api/auth/verify-email?token=xxx   邮箱激活（返回 HTML 成功/失败页）
+POST   /api/auth/resend-verification      已登录未验证用户重发验证邮件（限频）
 POST   /api/auth/logout                            登出
-GET    /api/auth/me                                当前登录用户信息
+GET    /api/auth/me                                当前登录用户信息（含 email、email_verified）
 ```
 
-注册限制：用户名 3-32 位 `^[a-zA-Z0-9_]+$`，密码 ≥8 位，按 IP 限频。
+注册限制：用户名 3-32 位 `^[a-zA-Z0-9_]+$`，密码 ≥8 位，邮箱需合法且未被已验证用户占用，按 IP 限频。
+登录失败超过阈值后封禁该 IP+用户名组合（内存 Map，进程级，重启清空）。
 
 ### 账户（登录态）
 
 ```
 POST /api/account/password          {oldPassword, newPassword}   改自己密码
 POST /api/account/regenerate-token                              重置自己的 API token（旧 token 立即失效）
+POST /api/account/email              {newEmail}                 修改邮箱（改后需重新验证，需 MAIL_ENABLED）
 ```
 
 ### 上传（API token）
@@ -206,11 +241,12 @@ DELETE /api/images/:id                      删除（本人删自己的，管理
 ### 用户管理（管理员）
 
 ```
-GET    /api/admin/users                     用户列表（含上传数量）
-POST   /api/admin/users                     {username, password, role} 建用户
-DELETE /api/admin/users/:id                 删用户（其图片转无主，不连带删除）
+GET    /api/admin/users                     用户列表（含邮箱、验证状态、上传数量）
+POST   /api/admin/users                     {username, password, role, email} 建用户
+DELETE /api/admin/users/:id                 删用户（其图片转无主，不连带删除；清理验证记录）
 POST   /api/admin/users/:id/reset-token     重置某用户 API token
 POST   /api/admin/users/:id/password        {newPassword} 改某用户密码
+POST   /api/admin/users/:id/verify           手动标记用户邮箱已验证（应急）
 ```
 
 ## 客户端配置
@@ -238,7 +274,7 @@ npm run build
 node scripts/test-upload-flow.js
 ```
 
-覆盖：登录/注册/校验、API token 上传、真实类型嗅探、去重、权限隔离、管理员删除/用户管理、改密码等 13 项。
+覆盖：登录/注册/邮箱验证/校验、API token 上传、真实类型嗅探、去重、权限隔离、管理员删除/用户管理/手动验证、改密码、未验证上传拦截、Turnstile 端点、登录失败封禁等 19 项。
 
 ## 安全说明
 
@@ -249,7 +285,13 @@ node scripts/test-upload-flow.js
 - session cookie 为 httpOnly + sameSite=lax，生产可开 secure
 - 上传/删除 token 不再出现在 URL query 中，避免泄露到日志/Referer
 - 密码 bcrypt 哈希存储
-- 单文件大小限制 + 按 IP 频率限制
+- **分层限流**：全局（防扫描）/ 上传按 IP + 按用户 / 图片访问 / 注册 / 登录，各维度独立计数
+- **登录失败封禁**：连续失败超阈值封禁该 IP+用户名组合，防撞库
+- **上传并发控制**：限制同时处理的上传请求数，超出返 503，避免大并发打爆内存与 R2
+- **helmet 安全头**：防点击劫持（X-Frame-Options DENY）、类型嗅探、referrer 策略
+- **错误响应不缓存**：4xx/5xx 设 `Cache-Control: no-store`，防错误页被 CDN 缓存
+- **Turnstile 人机验证**：注册防机器人批量注册
+- **邮箱验证激活**：未验证用户不能上传，防滥用
 
 ## License
 

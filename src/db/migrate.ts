@@ -25,29 +25,43 @@ const USERS_TABLE = `CREATE TABLE IF NOT EXISTS \`users\` (
   \`password_hash\` VARCHAR(255) NOT NULL,
   \`role\` ENUM('admin','user') NOT NULL DEFAULT 'user',
   \`api_token\` VARCHAR(64) NOT NULL,
+  \`email\` VARCHAR(255) NULL,
+  \`email_verified\` TINYINT(1) NOT NULL DEFAULT 0,
   \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (\`id\`),
   UNIQUE KEY \`uk_username\` (\`username\`),
   UNIQUE KEY \`uk_api_token\` (\`api_token\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
 
+const EMAIL_VERIF_TABLE = `CREATE TABLE IF NOT EXISTS \`email_verifications\` (
+  \`id\` BIGINT NOT NULL AUTO_INCREMENT,
+  \`user_id\` BIGINT NOT NULL,
+  \`token\` CHAR(64) NOT NULL,
+  \`email\` VARCHAR(255) NOT NULL,
+  \`expires_at\` TIMESTAMP NOT NULL,
+  \`consumed\` TINYINT(1) NOT NULL DEFAULT 0,
+  \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (\`id\`),
+  UNIQUE KEY \`uk_token\` (\`token\`),
+  KEY \`idx_user\` (\`user_id\`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+
+function dbName(): string {
+  return process.env.DB_NAME || 'sbimg';
+}
+
 async function columnExists(table: string, column: string): Promise<boolean> {
   const [rows] = await pool.query<RowDataPacket[]>(
     'SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
-    [config_db_name(), table, column],
+    [dbName(), table, column],
   );
   return rows.length > 0;
-}
-
-function config_db_name(): string {
-  // 避免与 config 模块循环依赖，从 process.env 兜底（migrate 运行时 env 已加载）
-  return process.env.DB_NAME || 'sbimg';
 }
 
 async function indexExists(table: string, indexName: string): Promise<boolean> {
   const [rows] = await pool.query<RowDataPacket[]>(
     'SELECT 1 FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?',
-    [config_db_name(), table, indexName],
+    [dbName(), table, indexName],
   );
   return rows.length > 0;
 }
@@ -59,6 +73,7 @@ export async function migrate(): Promise<void> {
   try {
     await conn.query(IMAGES_TABLE);
     await conn.query(USERS_TABLE);
+    await conn.query(EMAIL_VERIF_TABLE);
 
     // 幂等加列（老库升级）
     if (!(await columnExists('images', 'user_id'))) {
@@ -67,6 +82,17 @@ export async function migrate(): Promise<void> {
     if (!(await indexExists('images', 'idx_user'))) {
       await conn.query('ALTER TABLE `images` ADD INDEX `idx_user` (`user_id`)');
     }
+    if (!(await columnExists('users', 'email'))) {
+      await conn.query('ALTER TABLE `users` ADD COLUMN `email` VARCHAR(255) NULL');
+    }
+    if (!(await columnExists('users', 'email_verified'))) {
+      await conn.query('ALTER TABLE `users` ADD COLUMN `email_verified` TINYINT(1) NOT NULL DEFAULT 0');
+    }
+
+    // 清理过期未消费的验证记录
+    await conn.query(
+      'DELETE FROM `email_verifications` WHERE `consumed` = 0 AND `expires_at` < NOW()',
+    );
 
     console.log('[db] 表结构已就绪');
   } finally {

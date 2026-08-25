@@ -42,7 +42,8 @@ export async function setPassword(userId: number, newPlain: string): Promise<voi
 export async function deleteUser(userId: number): Promise<void> {
   const user = await getUserById(userId);
   if (!user) throw new AuthError('用户不存在', 404);
-  // 其图片转无主，不连带删除
+  // 其图片转无主，不连带删除；清理其邮箱验证记录
   await pool.query('UPDATE `images` SET `user_id` = NULL WHERE `user_id` = ?', [userId]);
+  await pool.query('DELETE FROM `email_verifications` WHERE `user_id` = ?', [userId]);
   await pool.query('DELETE FROM `users` WHERE `id` = ?', [userId]);
 }

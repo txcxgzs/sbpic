@@ -1,7 +1,11 @@
-// 多用户后台集成测试：覆盖鉴权/上传/权限/管理员/真实类型嗅探
+// 多用户后台集成测试：覆盖鉴权/上传/权限/管理员/真实类型嗅探/邮箱验证/Turnstile
 // 运行：node scripts/test-upload-flow.js （需先 npm run build + 本机 MySQL sbimg 库）
+//
+// 测试策略：
+//   - MAIL_ENABLED=false：注册直接创建「已验证」用户，便于跑上传/权限用例
+//   - TURNSTILE_ENABLED=false：注册不校验人机验证
+//   - 另起一组用例单独验证「未验证用户不能上传」「管理员手动验证」「邮箱激活流程」
 const path = require('path');
-const Module = require('module');
 const { Readable } = require('stream');
 const http = require('http');
 
@@ -19,19 +23,22 @@ const mockR2 = {
 const r2Abs = require.resolve(path.join(process.cwd(), 'dist', 'r2', 'client.js'));
 require.cache[r2Abs] = { id: r2Abs, filename: r2Abs, loaded: true, exports: mockR2, paths: [], children: [], parent: null };
 
-// ===== 环境变量 =====
+// ===== 环境变量（邮件关闭→注册即已验证；Turnstile 关闭→不校验）=====
 Object.assign(process.env, {
-  PORT: '3125', BASE_URL: 'http://localhost:3125',
+  PORT: '3125', BASE_URL: 'http://localhost:3125', APP_URL: 'http://localhost:3125',
   MAX_SIZE_MB: '20', RATE_LIMIT_PER_MIN: '1000',
   R2_ACCOUNT_ID: 'test', R2_ACCESS_KEY_ID: 'test', R2_SECRET_ACCESS_KEY: 'test', R2_BUCKET: 'sbimg',
   DB_HOST: '127.0.0.1', DB_PORT: '3306', DB_USER: 'sbimg', DB_PASSWORD: 'sbimgpw123', DB_NAME: 'sbimg',
   SESSION_SECRET: 'test-secret-at-least-16-chars!!', TRUST_PROXY: '0', COOKIE_SECURE: 'false',
   INIT_ADMIN_USER: 'admin', INIT_ADMIN_PASS: 'adminpass123',
   ALLOW_REGISTER: 'true', REGISTER_LIMIT_PER_10MIN: '1000',
+  MAIL_ENABLED: 'false',
+  TURNSTILE_ENABLED: 'false',
+  GLOBAL_LIMIT_PER_MIN: '1000', UPLOAD_LIMIT_PER_MIN: '1000', UPLOAD_LIMIT_PER_USER_PER_MIN: '1000',
+  VIEW_LIMIT_PER_MIN: '1000', UPLOAD_CONCURRENCY: '1000',
 });
 
-let server, baseUrl = 'http://localhost:3125';
-let cookieA = '', cookieB = ''; // 两个用户的 session cookie
+let cookieA = '', cookieB = '';
 let tokenA = '', tokenB = '';
 let imgIdA, imgIdB;
 
@@ -79,44 +86,48 @@ function multipart(fields){
 }
 
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0N8AAAAASUVORK5CYII=', 'base64');
-// 伪装成 png 的文本（magic bytes 不属于任何图片格式）
 const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
 
 (async () => {
   let failed = false;
   try {
-    // 先单独跑 migrate 建表，清空数据，确保 ensureInitialAdmin 能建初始 admin
     const { pool } = require(path.join(process.cwd(), 'dist', 'db', 'pool'));
     const { migrate } = require(path.join(process.cwd(), 'dist', 'db', 'migrate'));
     await migrate();
     await pool.query('DELETE FROM images');
+    await pool.query('DELETE FROM email_verifications');
     await pool.query('DELETE FROM users');
-    // 启动服务（ensureInitialAdmin 会建初始 admin）
     require(path.join(process.cwd(), 'dist', 'index.js'));
-    await new Promise((r) => setTimeout(r, 1800)); // 等启动 + 建初始 admin
+    await new Promise((r) => setTimeout(r, 1800));
 
     console.log('--- 1. 初始管理员存在 ---');
-    const me0 = await req('GET', '/api/auth/me', {});
-    assert(me0.status === 401, '未登录应 401');
-    let r = await req('POST', '/api/auth/login', { body: { username:'admin', password:'adminpass123' } });
+    let r = await req('GET', '/api/auth/me', {});
+    assert(r.status === 401, '未登录应 401');
+    r = await req('POST', '/api/auth/login', { body: { username:'admin', password:'adminpass123' } });
     assert(r.status === 200, 'admin 登录应 200, got '+r.status+' '+r.text);
     cookieA = cookieFrom(r.setCookie);
     assert(r.json.username === 'admin' && r.json.role === 'admin', 'admin 信息');
+    assert(r.json.email_verified === true, 'admin 应已验证');
     tokenA = r.json.api_token;
 
-    console.log('--- 2. 注册普通用户 userA ---');
-    r = await req('POST', '/api/auth/register', { body: { username:'usera', password:'userapass1' } });
+    console.log('--- 2. 注册普通用户 userA（MAIL_ENABLED=false → 直接已验证）---');
+    r = await req('POST', '/api/auth/register', { body: { username:'usera', email:'usera@test.com', password:'userapass1' } });
     assert(r.status === 200, '注册 userA 应 200, got '+r.status+' '+r.text);
     cookieB = cookieFrom(r.setCookie);
     assert(r.json.role === 'user', 'userA 应为 user 角色');
+    assert(r.json.email_verified === true, 'MAIL_ENABLED=false 注册即已验证');
     tokenB = r.json.api_token;
 
     console.log('--- 3. 注册校验：短密码 ---');
-    r = await req('POST', '/api/auth/register', { body: { username:'userc', password:'123' } });
+    r = await req('POST', '/api/auth/register', { body: { username:'userc', email:'c@test.com', password:'123' } });
     assert(r.status === 400, '短密码应 400');
 
-    console.log('--- 4. userA 用 API token 上传 PNG（真实类型嗅探通过）---');
-    const mp = multipart({ file: { filename:'a.png', contentType:'image/png', data: PNG1 } });
+    console.log('--- 4. 注册校验：邮箱格式 ---');
+    r = await req('POST', '/api/auth/register', { body: { username:'userd', email:'not-an-email', password:'validpass1' } });
+    assert(r.status === 400, '邮箱格式错应 400');
+
+    console.log('--- 5. userA 用 API token 上传 PNG（真实类型嗅探通过）---');
+    let mp = multipart({ file: { filename:'a.png', contentType:'image/png', data: PNG1 } });
     r = await req('POST', '/upload', { body: mp.body, headers: { 'Authorization':'Bearer '+tokenB, 'Content-Type':mp.contentType } });
     assert(r.status === 200, '上传应 200, got '+r.status+' '+r.text);
     assert(r.json.url && r.json.url.includes('/i/images/'), '返回 url');
@@ -124,67 +135,106 @@ const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
     assert(r.json.width === 1 && r.json.height === 1, '尺寸 1x1');
     imgIdA = r.json.id;
 
-    console.log('--- 5. 伪造类型：把文本伪���成 png 应被拒（magic bytes）---');
+    console.log('--- 6. 伪造类型：把文本伪装成 png 应被拒（magic bytes）---');
     const mp2 = multipart({ file: { filename:'a.png', contentType:'image/png', data: FAKE_PNG } });
     r = await req('POST', '/upload', { body: mp2.body, headers: { 'Authorization':'Bearer '+tokenB, 'Content-Type':mp2.contentType } });
     assert(r.status === 415, '伪类型应 415, got '+r.status+' '+r.text);
 
-    console.log('--- 6. 重复上传同一 PNG → 去重 ---');
+    console.log('--- 7. 重复上传同一 PNG → 去重 ---');
     const mp3 = multipart({ file: { filename:'a-copy.png', contentType:'image/png', data: PNG1 } });
     r = await req('POST', '/upload', { body: mp3.body, headers: { 'Authorization':'Bearer '+tokenB, 'Content-Type':mp3.contentType } });
     assert(r.status === 200 && r.json.duplicated === true, '应去重');
     assert(r.json.id === imgIdA, '返回同一 id');
 
-    console.log('--- 7. 上传无 token → 401 ---');
+    console.log('--- 8. 上传无 token → 401 ---');
     r = await req('POST', '/upload', { body: mp.body, headers: { 'Content-Type':mp.contentType } });
     assert(r.status === 401, '无 token 应 401');
 
-    console.log('--- 8. userA 列表只看到自己的 ---');
+    console.log('--- 9. userA 列表只看到自己的 ---');
     r = await req('GET', '/api/images', { cookie: cookieB });
     assert(r.status === 200 && r.json.items.length === 1, 'userA 应看到 1 张');
 
-    console.log('--- 9. admin 看全部（?all=1）含 userA 的图 ---');
+    console.log('--- 10. admin 看全部（?all=1）含 userA 的图 ---');
     r = await req('GET', '/api/images?all=1', { cookie: cookieA });
     assert(r.status === 200 && r.json.total >= 1, 'admin all 应看到全部');
 
-    console.log('--- 10. 权限隔离：userA 不能删别人的图（这里造一张 admin 的图）---');
-    // admin 直接上传一张
+    console.log('--- 11. 权限隔离：userA 不能删别人的图 ---');
     const mp4 = multipart({ file: { filename:'adm.png', contentType:'image/png', data: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAADklEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==','base64') } });
     r = await req('POST', '/upload', { body: mp4.body, headers: { 'Authorization':'Bearer '+tokenA, 'Content-Type':mp4.contentType } });
     imgIdB = r.json.id;
     assert(r.status === 200, 'admin 上传应 200');
-    // userA 尝试删 admin 的图
     r = await req('DELETE', '/api/images/'+imgIdB, { cookie: cookieB });
     assert(r.status === 403, 'userA 删 admin 图应 403, got '+r.status);
 
-    console.log('--- 11. admin 可删任意图 ---');
+    console.log('--- 12. admin 可删任意图 ---');
     r = await req('DELETE', '/api/images/'+imgIdB, { cookie: cookieA });
     assert(r.status === 200, 'admin 删除应 200, got '+r.status+' '+r.text);
-    // 删除后该 key 不应在 R2
     assert(!Array.from(r2Store.keys()).some(k => k.includes('91Jpz')), 'R2 对象应已删除');
 
-    console.log('--- 12. 管理员用户管理 ---');
+    console.log('--- 13. 管理员用户管理 + 手动验证 ---');
     r = await req('GET', '/api/admin/users', { cookie: cookieA });
     assert(r.status === 200 && r.json.items.length >= 2, 'admin 应看到至少2个用户');
+    assert(r.json.items.some(u => u.email === 'usera@test.com'), '用户列表应含邮箱');
+    assert(r.json.items.some(u => 'email_verified' in u), '用户列表应含验证状态');
     // 普通用户不能访问
     r = await req('GET', '/api/admin/users', { cookie: cookieB });
     assert(r.status === 403, 'userA 访问 admin API 应 403');
-    // admin 重置 userA token
+
+    console.log('--- 14. admin 重置 userA token，旧 token 失效 ---');
     const usersList = (await req('GET','/api/admin/users',{cookie:cookieA})).json.items;
     const uidA = usersList.find(u => u.username === 'usera').id;
     r = await req('POST', '/api/admin/users/'+uidA+'/reset-token', { cookie: cookieA });
     assert(r.status === 200 && r.json.api_token, '重置 token 应成功');
-    // 旧 token 失效
     r = await req('POST', '/upload', { body: mp.body, headers: { 'Authorization':'Bearer '+tokenB, 'Content-Type':mp.contentType } });
     assert(r.status === 401, '旧 token 应已失效');
+    // 获取新 token（重置后需重新登录拿新 token）
+    r = await req('POST', '/api/auth/login', { body: { username:'usera', password:'userapass1' } });
+    assert(r.status === 200, 'userA 重新登录应成功');
+    tokenB = r.json.api_token;
+    cookieB = cookieFrom(r.setCookie);
 
-    console.log('--- 13. 改密码后登录 ---');
+    console.log('--- 15. 改密码后登录 ---');
     r = await req('POST', '/api/account/password', { cookie: cookieB, body: { oldPassword:'userapass1', newPassword:'newpass123' } });
-    // cookieB 的 session 仍有效（同会话），但重新登录需用新密码
+    assert(r.status === 200, '改密码应成功, got '+r.status+' '+r.text);
     r = await req('POST', '/api/auth/login', { body: { username:'usera', password:'userapass1' } });
     assert(r.status === 401, '旧密码登录应失败');
     r = await req('POST', '/api/auth/login', { body: { username:'usera', password:'newpass123' } });
     assert(r.status === 200, '新密码登录应成功');
+    cookieB = cookieFrom(r.setCookie);
+    tokenB = r.json.api_token;
+
+    console.log('--- 16. 未验证用户不能上传 ---');
+    // admin 直接建一个未验证用户（role=user → emailVerified=0）
+    r = await req('POST', '/api/admin/users', { cookie: cookieA, body: { username:'unverified1', email:'unv@test.com', password:'unverifiedpass1', role:'user' } });
+    assert(r.status === 200, 'admin 建未验证用户应成功, got '+r.status+' '+r.text);
+    assert(r.json.email_verified === false, 'admin 建普通用户应未验证');
+    const unvToken = r.json.api_token;
+    // 未验证用户上传应被拒
+    r = await req('POST', '/upload', { body: mp.body, headers: { 'Authorization':'Bearer '+unvToken, 'Content-Type':mp.contentType } });
+    assert(r.status === 403, '未验证用户上传应 403, got '+r.status+' '+r.text);
+
+    console.log('--- 17. 管理员手动验证后可上传 ---');
+    const usersList2 = (await req('GET','/api/admin/users',{cookie:cookieA})).json.items;
+    const unvId = usersList2.find(u => u.username === 'unverified1').id;
+    r = await req('POST', '/api/admin/users/'+unvId+'/verify', { cookie: cookieA });
+    assert(r.status === 200, '管理员手动验证应成功, got '+r.status+' '+r.text);
+    // 手动验证后该 token 上传应通过
+    r = await req('POST', '/upload', { body: mp.body, headers: { 'Authorization':'Bearer '+unvToken, 'Content-Type':mp.contentType } });
+    assert(r.status === 200, '手动验证后上传应 200, got '+r.status+' '+r.text);
+
+    console.log('--- 18. Turnstile key 端点（关闭时 enabled=false）---');
+    r = await req('GET', '/api/auth/turnstile-key', {});
+    assert(r.status === 200, 'turnstile-key 应 200');
+    assert(r.json.enabled === false, 'TURNSTILE_ENABLED=false 应返回 enabled:false');
+
+    console.log('--- 19. 登录失败封禁（连续失败后封禁）---');
+    // 连续用错误密码登录同一用户名（注意 loginLimiter 按 IP+username 限 10/分钟，阈值 5 次封禁）
+    let lastStatus = 0;
+    for (let i = 0; i < 6; i++) {
+      r = await req('POST', '/api/auth/login', { body: { username:'usera', password:'wrongpassword' } });
+      lastStatus = r.status;
+    }
+    assert(lastStatus === 429, '连续失败后应 429 封禁, got '+lastStatus);
 
     console.log('\n=== 全部测试通过 ===');
   } catch (e) {
@@ -193,7 +243,9 @@ const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
   } finally {
     try {
       const { pool } = require(path.join(process.cwd(), 'dist', 'db', 'pool'));
-      await pool.query('DELETE FROM images'); await pool.query('DELETE FROM users');
+      await pool.query('DELETE FROM images');
+      await pool.query('DELETE FROM email_verifications');
+      await pool.query('DELETE FROM users');
       await pool.end();
     } catch {}
     process.exit(failed ? 1 : 0);

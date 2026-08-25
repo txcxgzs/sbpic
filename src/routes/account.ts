@@ -1,7 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { requireLogin } from '../middleware/auth';
 import { resetApiToken, setPassword } from '../services/users';
-import { verifyPassword } from '../services/auth';
+import {
+  verifyPassword,
+  resetEmailVerification,
+  createAndSendVerification,
+  EMAIL_RE,
+  isEmailTakenByVerified,
+  AuthError,
+} from '../services/auth';
+import { config } from '../config';
 
 const router = Router();
 
@@ -33,6 +41,27 @@ router.post('/api/account/password', requireLogin, async (req: Request, res: Res
 router.post('/api/account/regenerate-token', requireLogin, async (req: Request, res: Response) => {
   const token = await resetApiToken(req.user!.id);
   res.json({ api_token: token });
+});
+
+// 修改邮箱（改后需重新验证）
+router.post('/api/account/email', requireLogin, async (req: Request, res: Response) => {
+  const { newEmail } = req.body ?? {};
+  if (typeof newEmail !== 'string' || !EMAIL_RE.test(newEmail)) {
+    res.status(400).json({ error: '邮箱格式不正确' });
+    return;
+  }
+  if (!config.mail.enabled) {
+    res.status(400).json({ error: '邮件功能未启用，无法修改邮箱' });
+    return;
+  }
+  if (await isEmailTakenByVerified(newEmail)) {
+    res.status(409).json({ error: '该邮箱已被使用' });
+    return;
+  }
+  const user = req.user!;
+  await resetEmailVerification(user.id, newEmail);
+  await createAndSendVerification(user.id, newEmail);
+  res.json({ success: true, message: '验证邮件已发送到新邮箱' });
 });
 
 export default router;

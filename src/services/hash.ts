@@ -25,20 +25,33 @@ export function extFromMime(mime: string): string {
       return 'webp';
     case 'image/bmp':
       return 'bmp';
-    case 'image/svg+xml':
-      return 'svg';
     default:
       return '';
   }
 }
 
-/** 允许的图片 MIME 与扩展白名单 */
-export const ALLOWED_MIME = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/bmp',
-  'image/svg+xml',
-]);
+/**
+ * file-type 嗅探出的 MIME → 标准化 MIME（用于入库和 R2 ContentType）。
+ * 仅允许 jpg/png/gif/webp/bmp（已移除 svg，杜绝同源 XSS）。
+ */
+export function normalizeSniffedMime(raw: string): string | null {
+  switch (raw) {
+    case 'image/jpeg':
+      return 'image/jpeg';
+    case 'image/png':
+      return 'image/png';
+    case 'image/gif':
+      return 'image/gif';
+    case 'image/webp':
+      return 'image/webp';
+    case 'image/bmp':
+      return 'image/bmp';
+    default:
+      return null;
+  }
+}
+
+/** 由真实 MIME 取扩展名 */
+export function extFromStandardMime(mime: string): string {
+  return extFromMime(mime);
+}

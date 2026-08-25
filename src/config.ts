@@ -7,7 +7,6 @@ const schema = z.object({
     .string()
     .url()
     .transform((v) => v.replace(/\/+$/, '')),
-  ADMIN_TOKEN: z.string().min(8, 'ADMIN_TOKEN 至少 8 个字符'),
 
   MAX_SIZE_MB: z.coerce.number().int().positive().default(20),
   RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(30),
@@ -22,6 +21,25 @@ const schema = z.object({
   DB_USER: z.string().min(1),
   DB_PASSWORD: z.string(),
   DB_NAME: z.string().default('sbimg'),
+
+  // session / 鉴权
+  SESSION_SECRET: z.string().min(16, 'SESSION_SECRET 至少 16 个字符'),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(1),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .default('false'),
+
+  // 初始管理员
+  INIT_ADMIN_USER: z.string().default('admin'),
+  INIT_ADMIN_PASS: z.string().default(''),
+
+  // 注册
+  ALLOW_REGISTER: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .default('true'),
+  REGISTER_LIMIT_PER_10MIN: z.coerce.number().int().positive().default(3),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -37,7 +55,6 @@ if (!parsed.success) {
 export const config = {
   port: parsed.data.PORT,
   baseUrl: parsed.data.BASE_URL,
-  adminToken: parsed.data.ADMIN_TOKEN,
   maxSizeBytes: parsed.data.MAX_SIZE_MB * 1024 * 1024,
   rateLimitPerMin: parsed.data.RATE_LIMIT_PER_MIN,
 
@@ -55,6 +72,18 @@ export const config = {
     password: parsed.data.DB_PASSWORD,
     name: parsed.data.DB_NAME,
   },
+
+  session: {
+    secret: parsed.data.SESSION_SECRET,
+    trustProxy: parsed.data.TRUST_PROXY,
+    cookieSecure: parsed.data.COOKIE_SECURE,
+  },
+
+  initAdminUser: parsed.data.INIT_ADMIN_USER,
+  initAdminPass: parsed.data.INIT_ADMIN_PASS,
+
+  allowRegister: parsed.data.ALLOW_REGISTER,
+  registerLimitPer10Min: parsed.data.REGISTER_LIMIT_PER_10MIN,
 };
 
 export type Config = typeof config;

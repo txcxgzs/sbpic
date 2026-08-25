@@ -11,20 +11,15 @@ router.get('/i/*', async (req: Request, res: Response) => {
     return;
   }
 
+  let stream;
   try {
-    const { stream, mime, size } = await getObjectStream(key);
+    const r = await getObjectStream(key);
+    stream = r.stream;
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    if (mime) res.setHeader('Content-Type', mime);
-    if (size) res.setHeader('Content-Length', size);
-    stream.on('error', (e) => {
-      if (!res.headersSent) {
-        res.status(500).send('读取失败');
-      } else {
-        res.end();
-      }
-      console.error('[view] stream error', e);
-    });
-    stream.pipe(res);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', 'inline');
+    if (r.mime) res.setHeader('Content-Type', r.mime);
+    if (r.size) res.setHeader('Content-Length', r.size);
   } catch (err) {
     if (err instanceof R2Error) {
       res.status(err.status).send(err.message);
@@ -32,7 +27,20 @@ router.get('/i/*', async (req: Request, res: Response) => {
     }
     console.error('[view] error', err);
     res.status(500).send('服务器错误');
+    return;
   }
+
+  // 流式回写；出错时安全收尾，避免 write after end
+  stream.on('error', (e) => {
+    console.error('[view] stream error', e);
+    if (!res.headersSent) {
+      res.status(500).send('读取失败');
+    }
+    stream.destroy();
+    if (!res.writableEnded) res.end();
+  });
+  res.on('close', () => stream.destroy());
+  stream.pipe(res);
 });
 
 export default router;

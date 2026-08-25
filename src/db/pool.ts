@@ -22,5 +22,15 @@ export interface ImageRow {
   mime: string;
   width: number | null;
   height: number | null;
+  user_id: number | null;
+  created_at: Date;
+}
+
+export interface UserRow {
+  id: number;
+  username: string;
+  password_hash: string;
+  role: 'admin' | 'user';
+  api_token: string;
   created_at: Date;
 }

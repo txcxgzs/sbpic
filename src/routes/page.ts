@@ -7,12 +7,9 @@ const router = Router();
 // page.js 位于 dist/routes/，views 位于 dist/views/
 const HTML_PATH = join(__dirname, '..', 'views', 'index.html');
 
-let cached: string | null = null;
-
 function getPage(): string {
-  if (cached) return cached;
-  cached = readFileSync(HTML_PATH, 'utf8');
-  return cached;
+  // 小文件直接读盘，避免缓存导致改前端不生效
+  return readFileSync(HTML_PATH, 'utf8');
 }
 
 router.get('/', (_req: Request, res: Response) => {

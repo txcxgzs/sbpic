@@ -6,7 +6,7 @@ const boolStr = z
   .transform((v) => v === 'true');
 
 const schema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
+  PORT: z.coerce.number().int().positive().default(8321),
   BASE_URL: z
     .string()
     .url()
@@ -50,7 +50,7 @@ const schema = z.object({
     .string()
     .url()
     .transform((v) => v.replace(/\/+$/, ''))
-    .default('http://localhost:3000'),
+    .default('http://localhost:8321'),
 
   // Turnstile
   TURNSTILE_ENABLED: boolStr.default('true'),

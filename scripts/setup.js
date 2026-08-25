@@ -79,7 +79,7 @@ function askPass(q) {
     rootPass = await askPass('MySQL root 密码');
   }
 
-  const port = await ask('服务端口', '3000');
+  const port = await ask('服务端口（宝塔/反代用内部端口，避开常用端口）', '8321');
   const baseUrl = await ask('对外访问域名', `http://localhost:${port}`);
   const r2Account = await ask('R2 Account ID');
   const r2AccessKey = await ask('R2 Access Key ID');

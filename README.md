@@ -101,7 +101,13 @@ npm run deploy            # 用 PM2 启动
 pm2 startup               # 按提示执行输出的一行命令注册开机自启
 ```
 
-### 6. Nginx 反代（可选）
+### 6. Nginx 反代 / 宝塔面板
+
+应用默认监听 `8321` 端口，通过反代对外提供服务。
+
+**宝塔面板**：网站 → 添加站点 → 填域名 → 进站点设置 → 反向代理 → 添加反向代理，目标 URL 填 `http://127.0.0.1:8321`。`.env` 里设 `BASE_URL`/`APP_URL` 为你的域名、`TRUST_PROXY=1`、`COOKIE_SECURE=true`（HTTPS）。
+
+**手动 Nginx**：
 
 ```nginx
 server {
@@ -109,7 +115,7 @@ server {
     server_name img.example.com;
     client_max_body_size 25M;
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:8321;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

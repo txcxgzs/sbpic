@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { pool, UserRow } from '../db/pool';
 import { config } from '../config';
+import { getSetting } from './settings';
 import { sendVerificationEmail } from './mail';
 
 export class AuthError extends Error {
@@ -129,7 +130,7 @@ export async function createAndSendVerification(userId: number, email: string): 
     'INSERT INTO `email_verifications` (`user_id`, `token`, `email`, `expires_at`) VALUES (?, ?, ?, ?)',
     [userId, token, email, expires],
   );
-  const link = `${config.mail.appUrl}/api/auth/verify-email?token=${token}`;
+  const link = `${getSetting('app_url')}/api/auth/verify-email?token=${token}`;
   const ok = await sendVerificationEmail(email, link);
   if (!ok) {
     console.warn(`[auth] 验证邮件未发出，用户 ${userId} 的链接：${link}`);

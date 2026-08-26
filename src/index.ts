@@ -5,6 +5,7 @@ import { config } from './config';
 import { pool } from './db/pool';
 import { migrate } from './db/migrate';
 import { ensureInitialAdmin } from './services/auth';
+import { loadSettings } from './services/settings';
 import { notFound, errorHandler } from './middleware/errorHandler';
 import { attachSessionUser } from './middleware/auth';
 import { globalLimiter } from './middleware/rateLimit';
@@ -16,9 +17,11 @@ import imagesRouter from './routes/images';
 import authRouter from './routes/auth';
 import accountRouter from './routes/account';
 import adminRouter from './routes/admin';
+import settingsRouter from './routes/settings';
 
 async function main(): Promise<void> {
   await migrate();
+  await loadSettings();
   await ensureInitialAdmin();
 
   const app = express();
@@ -74,6 +77,7 @@ async function main(): Promise<void> {
   app.use(authRouter);       // /api/auth/*
   app.use(accountRouter);    // /api/account/*
   app.use(adminRouter);      // /api/admin/*
+  app.use(settingsRouter);   // /api/admin/settings
   app.use(uploadRouter);     // /upload /api/upload /api/v1/upload
   app.use(imagesRouter);     // /api/images
 
@@ -83,7 +87,7 @@ async function main(): Promise<void> {
 
   app.listen(config.port, () => {
     console.log(`[sbimg] 服务已启动: http://localhost:${config.port}`);
-    console.log(`[sbimg] 对外域名: ${config.baseUrl}`);
+    console.log('[sbimg] 业务配置（R2/邮件/Turnstile/限流等）请在后台「系统设置」页面配置');
   });
 }
 

@@ -5,20 +5,13 @@ const boolStr = z
   .enum(['true', 'false'])
   .transform((v) => v === 'true');
 
+/**
+ * 引导配置：仅启动必需项（DB 连接、session、端口、初始管理员）走 .env。
+ * 业务配置（R2 / 邮件 / Turnstile / 限流 / 站点 URL 等）全部在后台「系统设置」管理，
+ * 存 MySQL settings 表，运行时动态读取，改完即时生效。见 src/services/settings.ts。
+ */
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(8321),
-  BASE_URL: z
-    .string()
-    .url()
-    .transform((v) => v.replace(/\/+$/, '')),
-
-  MAX_SIZE_MB: z.coerce.number().int().positive().default(20),
-  RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(30),
-
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET: z.string().min(1),
 
   DB_HOST: z.string().default('127.0.0.1'),
   DB_PORT: z.coerce.number().int().positive().default(3306),
@@ -31,40 +24,9 @@ const schema = z.object({
   TRUST_PROXY: z.coerce.number().int().min(0).default(1),
   COOKIE_SECURE: boolStr.default('false'),
 
-  // 初始管理员
+  // 初始管理员（首次启动时若 users 表为空自动创建）
   INIT_ADMIN_USER: z.string().default('admin'),
   INIT_ADMIN_PASS: z.string().default(''),
-
-  // 注册
-  ALLOW_REGISTER: boolStr.default('true'),
-  REGISTER_LIMIT_PER_10MIN: z.coerce.number().int().positive().default(3),
-
-  // 邮件
-  MAIL_ENABLED: boolStr.default('true'),
-  SMTP_HOST: z.string().default(''),
-  SMTP_PORT: z.coerce.number().int().positive().default(587),
-  SMTP_USER: z.string().default(''),
-  SMTP_PASS: z.string().default(''),
-  SMTP_FROM: z.string().default(''),
-  APP_URL: z
-    .string()
-    .url()
-    .transform((v) => v.replace(/\/+$/, ''))
-    .default('http://localhost:8321'),
-
-  // Turnstile
-  TURNSTILE_ENABLED: boolStr.default('true'),
-  TURNSTILE_SITE_KEY: z.string().default(''),
-  TURNSTILE_SECRET_KEY: z.string().default(''),
-
-  // 限流参数
-  GLOBAL_LIMIT_PER_MIN: z.coerce.number().int().positive().default(300),
-  UPLOAD_LIMIT_PER_MIN: z.coerce.number().int().positive().default(100),
-  UPLOAD_LIMIT_PER_USER_PER_MIN: z.coerce.number().int().positive().default(60),
-  VIEW_LIMIT_PER_MIN: z.coerce.number().int().positive().default(600),
-  LOGIN_FAIL_THRESHOLD: z.coerce.number().int().positive().default(5),
-  LOGIN_BAN_MINUTES: z.coerce.number().int().positive().default(15),
-  UPLOAD_CONCURRENCY: z.coerce.number().int().positive().default(20),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -79,16 +41,6 @@ if (!parsed.success) {
 
 export const config = {
   port: parsed.data.PORT,
-  baseUrl: parsed.data.BASE_URL,
-  maxSizeBytes: parsed.data.MAX_SIZE_MB * 1024 * 1024,
-  rateLimitPerMin: parsed.data.RATE_LIMIT_PER_MIN,
-
-  r2: {
-    accountId: parsed.data.R2_ACCOUNT_ID,
-    accessKeyId: parsed.data.R2_ACCESS_KEY_ID,
-    secretAccessKey: parsed.data.R2_SECRET_ACCESS_KEY,
-    bucket: parsed.data.R2_BUCKET,
-  },
 
   db: {
     host: parsed.data.DB_HOST,
@@ -106,35 +58,6 @@ export const config = {
 
   initAdminUser: parsed.data.INIT_ADMIN_USER,
   initAdminPass: parsed.data.INIT_ADMIN_PASS,
-
-  allowRegister: parsed.data.ALLOW_REGISTER,
-  registerLimitPer10Min: parsed.data.REGISTER_LIMIT_PER_10MIN,
-
-  mail: {
-    enabled: parsed.data.MAIL_ENABLED,
-    host: parsed.data.SMTP_HOST,
-    port: parsed.data.SMTP_PORT,
-    user: parsed.data.SMTP_USER,
-    pass: parsed.data.SMTP_PASS,
-    from: parsed.data.SMTP_FROM,
-    appUrl: parsed.data.APP_URL,
-  },
-
-  turnstile: {
-    enabled: parsed.data.TURNSTILE_ENABLED,
-    siteKey: parsed.data.TURNSTILE_SITE_KEY,
-    secretKey: parsed.data.TURNSTILE_SECRET_KEY,
-  },
-
-  limits: {
-    globalPerMin: parsed.data.GLOBAL_LIMIT_PER_MIN,
-    uploadPerMin: parsed.data.UPLOAD_LIMIT_PER_MIN,
-    uploadPerUserPerMin: parsed.data.UPLOAD_LIMIT_PER_USER_PER_MIN,
-    viewPerMin: parsed.data.VIEW_LIMIT_PER_MIN,
-    loginFailThreshold: parsed.data.LOGIN_FAIL_THRESHOLD,
-    loginBanMinutes: parsed.data.LOGIN_BAN_MINUTES,
-    uploadConcurrency: parsed.data.UPLOAD_CONCURRENCY,
-  },
 };
 
 export type Config = typeof config;

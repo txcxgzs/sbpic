@@ -1,13 +1,15 @@
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
-import { Request, Response, NextFunction } from 'express';
-import { config } from '../config';
+import { Request } from 'express';
+import { getSettingNum } from '../services/settings';
 
 const denyMsg = (msg: string) => ({ error: msg });
+
+// express-rate-limit v7 的 max 支持函数，运行时动态读 settings（改完即时生效）
 
 // 全局限流：按 IP，防扫描
 export const globalLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 60 * 1000,
-  max: config.limits.globalPerMin,
+  max: () => getSettingNum('global_limit_per_min', 300),
   standardHeaders: true,
   legacyHeaders: false,
   message: denyMsg('请求过于频繁'),
@@ -16,7 +18,7 @@ export const globalLimiter: RateLimitRequestHandler = rateLimit({
 // 上传限流：按 IP
 export const uploadRateLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 60 * 1000,
-  max: config.limits.uploadPerMin,
+  max: () => getSettingNum('upload_limit_per_min', 100),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `${req.ip}:up`,
@@ -26,7 +28,7 @@ export const uploadRateLimiter: RateLimitRequestHandler = rateLimit({
 // 上传限流：按用户（需在 requireApiToken 之后挂载）
 export const uploadUserLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 60 * 1000,
-  max: config.limits.uploadPerUserPerMin,
+  max: () => getSettingNum('upload_limit_per_user_per_min', 60),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `u:${req.user?.id ?? req.ip}`,
@@ -36,7 +38,7 @@ export const uploadUserLimiter: RateLimitRequestHandler = rateLimit({
 // 注册限流：按 IP，每 10 分钟 N 次
 export const registerLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: config.registerLimitPer10Min,
+  max: () => getSettingNum('register_limit_per_10min', 3),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `${req.ip}:reg`,
@@ -49,7 +51,7 @@ export const loginLimiter: RateLimitRequestHandler = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
+  keyGenerator: (req: Request) => {
     const u = (req.body?.username as string) || 'anon';
     return `${req.ip}:login:${u}`;
   },
@@ -69,7 +71,7 @@ export const resendVerifyLimiter: RateLimitRequestHandler = rateLimit({
 // 图片访问限流：按 IP，较宽松
 export const viewLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 60 * 1000,
-  max: config.limits.viewPerMin,
+  max: () => getSettingNum('view_limit_per_min', 600),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `${req.ip}:view`,
@@ -92,10 +94,12 @@ export function recordLoginFailure(ip: string, username: string): boolean {
   // 之前被封过且已过封禁期 → 重新计数；未被封过（banUntil=0）→ 累加
   let count = rec ? (rec.banUntil > 0 ? 0 : rec.count) : 0;
   count += 1;
-  if (count >= config.limits.loginFailThreshold) {
-    const banUntil = now + config.limits.loginBanMinutes * 60 * 1000;
+  const threshold = getSettingNum('login_fail_threshold', 5);
+  const banMinutes = getSettingNum('login_ban_minutes', 15);
+  if (count >= threshold) {
+    const banUntil = now + banMinutes * 60 * 1000;
     failMap.set(key, { count, banUntil });
-    console.warn(`[rateLimit] IP ${ip} 登录用户 ${username} 失败 ${count} 次，封禁 ${config.limits.loginBanMinutes} 分钟`);
+    console.warn(`[rateLimit] IP ${ip} 登录用户 ${username} 失败 ${count} 次，封禁 ${banMinutes} 分钟`);
     return true;
   }
   failMap.set(key, { count, banUntil: 0 });

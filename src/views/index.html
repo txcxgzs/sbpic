@@ -342,7 +342,7 @@ function navItems(){
     {id:'images',label:'我的图片',ico:'▦'},
     {id:'account',label:'账户',ico:'⚙'},
   ];
-  if(me && me.role==='admin') items.push({id:'admin',label:'管理后台',ico:'★'});
+  if(me && me.role==='admin') items.push({id:'admin',label:'管理后台',ico:'★'}, {id:'settings',label:'系统设置',ico:'☰'});
   return items;
 }
 function buildNav(){
@@ -360,7 +360,7 @@ function navTo(view){
   curView = view;
   buildNav();
   $('#sidebar').classList.remove('open');
-  const labels = {dashboard:'仪表盘',upload:'上传图片',images:'我的图片',account:'账户',admin:'管理后台'};
+  const labels = {dashboard:'仪表盘',upload:'上传图片',images:'我的图片',account:'账户',admin:'管理后台',settings:'系统设置'};
   $('#crumb').textContent = labels[view] || '';
   renderView(view);
 }
@@ -375,6 +375,7 @@ function renderView(view){
   else if(view==='images') renderImages(c);
   else if(view==='account') renderAccount(c);
   else if(view==='admin') renderAdmin(c);
+  else if(view==='settings') renderSettings(c);
 }
 
 /* ===== 仪表盘 ===== */
@@ -637,6 +638,220 @@ async function loadAdminImages(){
     const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--text-2)'; sp.textContent=`${adminPage} / ${pages}`; box.appendChild(sp);
     box.appendChild(mk('›',adminPage+1,adminPage>=pages));
   }catch(e){ $('#adminTbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+}
+
+/* ===== 系统设置 ===== */
+let settingsData = {};
+function maskSecret(s){ if(!s) return '••••••••'; return maskToken(s); }
+function badgeConfigured(ok){ return ok?'<span class="badge badge-ok">已配置</span>':'<span class="badge badge-bad">未配置</span>'; }
+function boolBadge(v){ return v==='true'?'<span class="badge badge-ok">启用</span>':'<span class="badge badge-warn">禁用</span>'; }
+function valOrDash(v){ return v?escapeHtml(v):'<span class="muted">-</span>'; }
+
+async function renderSettings(c){
+  c.innerHTML = `
+    <div class="stats" id="settingsStats"><div class="stat"><div class="label">加载中…</div></div></div>
+    <div class="card">
+      <div class="card-title">Cloudflare R2<span class="sub"><button class="btn btn-sm" id="btnEditR2">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">Account ID</span><span class="value mono" id="sR2AccountId">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">Access Key ID</span><span class="value mono" id="sR2AccessKey">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">Secret Access Key</span><span class="value mono" id="sR2Secret">••••••••</span></div><div class="right" id="sR2SecretBadge"></div></div>
+      <div class="info-row"><div class="left"><span class="label">Bucket</span><span class="value mono" id="sR2Bucket">-</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">邮件 SMTP<span class="sub"><button class="btn btn-sm" id="btnEditMail">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">邮件功能</span><span class="value" id="sMailEnabled">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">SMTP 服务器</span><span class="value mono" id="sSmtpHost">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">端口</span><span class="value" id="sSmtpPort">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">用户名</span><span class="value mono" id="sSmtpUser">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">密码</span><span class="value mono">••••••••</span></div><div class="right" id="sSmtpPassBadge"></div></div>
+      <div class="info-row"><div class="left"><span class="label">发件人</span><span class="value" id="sSmtpFrom">-</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Turnstile 人机验证<span class="sub"><button class="btn btn-sm" id="btnEditTurnstile">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">Turnstile</span><span class="value" id="sTurnstileEnabled">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">Site Key</span><span class="value mono" id="sTurnstileSiteKey">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">Secret Key</span><span class="value mono">••••••••</span></div><div class="right" id="sTurnstileSecretBadge"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">站点与注册<span class="sub"><button class="btn btn-sm" id="btnEditSite">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">对外域名 (Base URL)</span><span class="value mono" id="sBaseUrl">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">站点 URL (App URL)</span><span class="value mono" id="sAppUrl">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">开放注册</span><span class="value" id="sAllowRegister">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">注册限频 (每10分钟)</span><span class="value" id="sRegisterLimit">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">上传大小上限 (MB)</span><span class="value" id="sMaxSize">-</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">限流参数<span class="sub"><button class="btn btn-sm" id="btnEditLimits">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">全局每分钟</span><span class="value" id="sGlobalLimit">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">上传每IP每分钟</span><span class="value" id="sUploadLimit">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">上传每用户每分钟</span><span class="value" id="sUploadUserLimit">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">图片访问每分钟</span><span class="value" id="sViewLimit">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">登录失败阈值</span><span class="value" id="sLoginFailThreshold">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">登录封禁分钟</span><span class="value" id="sLoginBanMinutes">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">上传并发数</span><span class="value" id="sUploadConcurrency">-</span></div></div>
+    </div>`;
+  $('#btnEditR2').addEventListener('click', modalEditR2);
+  $('#btnEditMail').addEventListener('click', modalEditMail);
+  $('#btnEditTurnstile').addEventListener('click', modalEditTurnstile);
+  $('#btnEditSite').addEventListener('click', modalEditSite);
+  $('#btnEditLimits').addEventListener('click', modalEditLimits);
+  await loadSettingsData();
+}
+async function loadSettingsData(){
+  try{
+    const j = await api('/api/admin/settings');
+    settingsData = j.settings;
+    // R2
+    $('#sR2AccountId').innerHTML = valOrDash(settingsData.r2_account_id?.value);
+    $('#sR2AccessKey').innerHTML = valOrDash(settingsData.r2_access_key_id?.value);
+    $('#sR2SecretBadge').innerHTML = badgeConfigured(settingsData.r2_secret_access_key?.has_value);
+    $('#sR2Bucket').innerHTML = valOrDash(settingsData.r2_bucket?.value);
+    // 邮件
+    $('#sMailEnabled').innerHTML = boolBadge(settingsData.mail_enabled?.value);
+    $('#sSmtpHost').innerHTML = valOrDash(settingsData.smtp_host?.value);
+    $('#sSmtpPort').textContent = settingsData.smtp_port?.value || '-';
+    $('#sSmtpUser').innerHTML = valOrDash(settingsData.smtp_user?.value);
+    $('#sSmtpPassBadge').innerHTML = badgeConfigured(settingsData.smtp_pass?.has_value);
+    $('#sSmtpFrom').innerHTML = valOrDash(settingsData.smtp_from?.value);
+    // Turnstile
+    $('#sTurnstileEnabled').innerHTML = boolBadge(settingsData.turnstile_enabled?.value);
+    $('#sTurnstileSiteKey').innerHTML = valOrDash(settingsData.turnstile_site_key?.value);
+    $('#sTurnstileSecretBadge').innerHTML = badgeConfigured(settingsData.turnstile_secret_key?.has_value);
+    // 站点与注册
+    $('#sBaseUrl').innerHTML = valOrDash(settingsData.base_url?.value);
+    $('#sAppUrl').innerHTML = valOrDash(settingsData.app_url?.value);
+    $('#sAllowRegister').innerHTML = boolBadge(settingsData.allow_register?.value);
+    $('#sRegisterLimit').textContent = settingsData.register_limit_per_10min?.value || '-';
+    $('#sMaxSize').textContent = settingsData.max_size_mb?.value ? settingsData.max_size_mb.value + ' MB' : '-';
+    // 限流
+    $('#sGlobalLimit').textContent = settingsData.global_limit_per_min?.value || '-';
+    $('#sUploadLimit').textContent = settingsData.upload_limit_per_min?.value || '-';
+    $('#sUploadUserLimit').textContent = settingsData.upload_limit_per_user_per_min?.value || '-';
+    $('#sViewLimit').textContent = settingsData.view_limit_per_min?.value || '-';
+    $('#sLoginFailThreshold').textContent = settingsData.login_fail_threshold?.value || '-';
+    $('#sLoginBanMinutes').textContent = settingsData.login_ban_minutes?.value || '-';
+    $('#sUploadConcurrency').textContent = settingsData.upload_concurrency?.value || '-';
+    // stats
+    const r2ok = settingsData.r2_account_id?.value && settingsData.r2_access_key_id?.value && settingsData.r2_secret_access_key?.has_value;
+    const mailok = settingsData.mail_enabled?.value === 'true' && settingsData.smtp_host?.value && settingsData.smtp_pass?.has_value;
+    const tsok = settingsData.turnstile_enabled?.value === 'true' && settingsData.turnstile_site_key?.value;
+    $('#settingsStats').innerHTML = `
+      <div class="stat"><div class="label">R2 存储</div><div class="num" style="font-size:15px;padding-top:6px">${badgeConfigured(r2ok)}</div></div>
+      <div class="stat"><div class="label">邮件</div><div class="num" style="font-size:15px;padding-top:6px">${mailok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>
+      <div class="stat"><div class="label">Turnstile</div><div class="num" style="font-size:15px;padding-top:6px">${tsok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>`;
+  }catch(e){ toast(e.message,'bad'); }
+}
+function boolSelect(id, val){ return `<select id="${id}"><option value="true" ${val==='true'?'selected':''}>启用</option><option value="false" ${val!=='true'?'selected':''}>禁用</option></select>`; }
+function saveSettingsApi(obj){
+  return api('/api/admin/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+}
+function modalEditR2(){
+  const d = settingsData;
+  openModal('编辑 Cloudflare R2',
+    `<div class="field"><label>Account ID</label><input id="mR2AccountId" value="${escapeHtml(d.r2_account_id?.value||'')}" /></div>
+     <div class="field"><label>Access Key ID</label><input id="mR2AccessKey" value="${escapeHtml(d.r2_access_key_id?.value||'')}" /></div>
+     <div class="field"><label>Secret Access Key</label><input id="mR2Secret" type="password" placeholder="${d.r2_secret_access_key?.has_value?'留空保持不变':'填写 Secret Key'}" /></div>
+     <div class="field"><label>Bucket</label><input id="mR2Bucket" value="${escapeHtml(d.r2_bucket?.value||'')}" /></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    const secret = $('#mR2Secret').value;
+    try{ await saveSettingsApi({
+      r2_account_id: $('#mR2AccountId').value.trim(),
+      r2_access_key_id: $('#mR2AccessKey').value.trim(),
+      r2_bucket: $('#mR2Bucket').value.trim(),
+      ...(secret ? { r2_secret_access_key: secret } : {}),
+    }); closeModal(); toast('已保存，R2 配置即时生效','ok'); loadSettingsData(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
+function modalEditMail(){
+  const d = settingsData;
+  openModal('编辑邮件 SMTP',
+    `<div class="field"><label>邮件功能</label>${boolSelect('mMailEnabled', d.mail_enabled?.value||'false')}</div>
+     <div class="field"><label>SMTP 服务器</label><input id="mSmtpHost" value="${escapeHtml(d.smtp_host?.value||'')}" placeholder="如 smtp-relay.brevo.net" /></div>
+     <div class="field"><label>SMTP 端口</label><input id="mSmtpPort" type="number" value="${d.smtp_port?.value||'587'}" /></div>
+     <div class="field"><label>用户名</label><input id="mSmtpUser" value="${escapeHtml(d.smtp_user?.value||'')}" /></div>
+     <div class="field"><label>密码</label><input id="mSmtpPass" type="password" placeholder="${d.smtp_pass?.has_value?'留空保持不变':'填写 SMTP 密码/Key'}" /></div>
+     <div class="field"><label>发件人</label><input id="mSmtpFrom" value="${escapeHtml(d.smtp_from?.value||'')}" placeholder='如 烧饼图床 <noreply@example.com>' /></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    const pass = $('#mSmtpPass').value;
+    try{ await saveSettingsApi({
+      mail_enabled: $('#mMailEnabled').value,
+      smtp_host: $('#mSmtpHost').value.trim(),
+      smtp_port: $('#mSmtpPort').value,
+      smtp_user: $('#mSmtpUser').value.trim(),
+      smtp_from: $('#mSmtpFrom').value.trim(),
+      ...(pass ? { smtp_pass: pass } : {}),
+    }); closeModal(); toast('已保存，邮件配置即时生效','ok'); loadSettingsData(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
+function modalEditTurnstile(){
+  const d = settingsData;
+  openModal('编辑 Turnstile',
+    `<div class="field"><label>Turnstile</label>${boolSelect('mTurnstileEnabled', d.turnstile_enabled?.value||'false')}</div>
+     <div class="field"><label>Site Key</label><input id="mTurnstileSiteKey" value="${escapeHtml(d.turnstile_site_key?.value||'')}" /></div>
+     <div class="field"><label>Secret Key</label><input id="mTurnstileSecret" type="password" placeholder="${d.turnstile_secret_key?.has_value?'留空保持不变':'填写 Secret Key'}" /></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    const secret = $('#mTurnstileSecret').value;
+    try{ await saveSettingsApi({
+      turnstile_enabled: $('#mTurnstileEnabled').value,
+      turnstile_site_key: $('#mTurnstileSiteKey').value.trim(),
+      ...(secret ? { turnstile_secret_key: secret } : {}),
+    }); closeModal(); toast('已保存','ok'); loadSettingsData(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
+function modalEditSite(){
+  const d = settingsData;
+  openModal('编辑站点与注册',
+    `<div class="field"><label>对外域名 (Base URL)</label><input id="mBaseUrl" value="${escapeHtml(d.base_url?.value||'')}" placeholder="https://img.example.com" /><div class="hint">用于生成图片访问链接</div></div>
+     <div class="field"><label>站点 URL (App URL)</label><input id="mAppUrl" value="${escapeHtml(d.app_url?.value||'')}" placeholder="https://img.example.com" /><div class="hint">用于生成邮箱验证链接，一般与 Base URL 相同</div></div>
+     <div class="field"><label>开放注册</label>${boolSelect('mAllowRegister', d.allow_register?.value||'false')}</div>
+     <div class="field"><label>注册限频 (每10分钟/IP)</label><input id="mRegisterLimit" type="number" value="${d.register_limit_per_10min?.value||'3'}" /></div>
+     <div class="field"><label>上传大小上限 (MB)</label><input id="mMaxSize" type="number" value="${d.max_size_mb?.value||'20'}" /></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await saveSettingsApi({
+      base_url: $('#mBaseUrl').value.trim(),
+      app_url: $('#mAppUrl').value.trim(),
+      allow_register: $('#mAllowRegister').value,
+      register_limit_per_10min: $('#mRegisterLimit').value,
+      max_size_mb: $('#mMaxSize').value,
+    }); closeModal(); toast('已保存','ok'); loadSettingsData(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
+function modalEditLimits(){
+  const d = settingsData;
+  openModal('编辑限流参数',
+    `<div class="field"><label>全局每IP每分钟</label><input id="mGlobalLimit" type="number" value="${d.global_limit_per_min?.value||'300'}" /></div>
+     <div class="field"><label>上传每IP每分钟</label><input id="mUploadLimit" type="number" value="${d.upload_limit_per_min?.value||'100'}" /></div>
+     <div class="field"><label>上传每用户每分钟</label><input id="mUploadUserLimit" type="number" value="${d.upload_limit_per_user_per_min?.value||'60'}" /></div>
+     <div class="field"><label>图片访问每IP每分钟</label><input id="mViewLimit" type="number" value="${d.view_limit_per_min?.value||'600'}" /></div>
+     <div class="field"><label>登录失败阈值 (次)</label><input id="mLoginFailThreshold" type="number" value="${d.login_fail_threshold?.value||'5'}" /></div>
+     <div class="field"><label>登录封禁分钟</label><input id="mLoginBanMinutes" type="number" value="${d.login_ban_minutes?.value||'15'}" /></div>
+     <div class="field"><label>上传并发数</label><input id="mUploadConcurrency" type="number" value="${d.upload_concurrency?.value||'20'}" /></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await saveSettingsApi({
+      global_limit_per_min: $('#mGlobalLimit').value,
+      upload_limit_per_min: $('#mUploadLimit').value,
+      upload_limit_per_user_per_min: $('#mUploadUserLimit').value,
+      view_limit_per_min: $('#mViewLimit').value,
+      login_fail_threshold: $('#mLoginFailThreshold').value,
+      login_ban_minutes: $('#mLoginBanMinutes').value,
+      upload_concurrency: $('#mUploadConcurrency').value,
+    }); closeModal(); toast('已保存，限流参数即时生效','ok'); loadSettingsData(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
 }
 
 /* ===== 启动 ===== */

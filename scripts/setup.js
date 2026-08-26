@@ -97,15 +97,12 @@ function askPass(q) {
   }
 
   const port = await ask('服务端口（宝塔/反代用内部端口，避开常用端口）', '8321');
-  const baseUrl = await ask('对外访问域名', `http://localhost:${port}`);
-  const r2Account = await ask('R2 Account ID');
-  const r2AccessKey = await ask('R2 Access Key ID');
-  const r2Secret = await askPass('R2 Secret Access Key');
-  const r2Bucket = await ask('R2 Bucket', 'sbimg');
-
   const adminUser = await ask('初始管理员用户名', 'admin');
   const adminPassChoice = await ask('初始管理员密码（留空自动生成）', '');
 
+  console.log('');
+  log('R2 / 邮件 / Turnstile / 限流等业务配置不在这里填——');
+  log('启动后登录后台，在「系统设置」页面配置即可，改完即时生效。');
   console.log('');
 
   // 4. 自动建库
@@ -122,21 +119,14 @@ function askPass(q) {
     }
   }
 
-  // 5. 生成 .env
+  // 5. 生成 .env（仅启动必需项；业务配置在后台「系统设置」页面配）
   log('生成 .env ...');
   const sessionSecret = crypto.randomBytes(32).toString('hex');
   const env = `# 烧饼图床配置 - 由 setup 脚本生成
+# 注意：R2 / 邮件 / Turnstile / 限流 / 站点URL 等业务配置不在这里
+#       启动后登录后台「系统设置」页面配置，改完即时生效
 
 PORT=${port}
-BASE_URL=${baseUrl}
-APP_URL=${baseUrl}
-MAX_SIZE_MB=20
-
-# Cloudflare R2
-R2_ACCOUNT_ID=${r2Account}
-R2_ACCESS_KEY_ID=${r2AccessKey}
-R2_SECRET_ACCESS_KEY=${r2Secret}
-R2_BUCKET=${r2Bucket}
 
 # MySQL
 DB_HOST=${dbHost}
@@ -150,26 +140,9 @@ SESSION_SECRET=${sessionSecret}
 TRUST_PROXY=1
 COOKIE_SECURE=false
 
-# 初始管理员
+# 初始管理员（首次启动时若 users 表为空自动创建）
 INIT_ADMIN_USER=${adminUser}
 INIT_ADMIN_PASS=${adminPassChoice}
-
-# 注册
-ALLOW_REGISTER=true
-REGISTER_LIMIT_PER_10MIN=3
-
-# 邮件（按需开启）
-MAIL_ENABLED=false
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=
-
-# Turnstile（按需开启）
-TURNSTILE_ENABLED=false
-TURNSTILE_SITE_KEY=
-TURNSTILE_SECRET_KEY=
 `;
   fs.writeFileSync(envFile, env, 'utf8');
   ok('.env 已生成');
@@ -188,12 +161,14 @@ async function buildAndRun() {
   console.log('');
   ok('安装完成！');
   console.log('');
-  log('启动方式：');
-  console.log('  npm run deploy          # 一键启动/重启');
-  console.log('  npm start               # 前台运行');
-  console.log('  npm run deploy -- logs    # 查看日志');
-  console.log('  npm run deploy -- stop    # 停止');
+  log('下一步：');
+  console.log('  1. npm run deploy          # 一键启动');
+  console.log('  2. 浏览器打开 http://你的IP:端口 登录管理员');
+  console.log('  3. 进入「系统设置」配置 R2 / 邮件 / Turnstile 等');
   console.log('');
-  log('如需开启邮件验证/Turnstile，编辑 .env 后 npm run deploy 重启');
+  log('管理命令：');
+  console.log('  npm run deploy -- status    # 查看状态');
+  console.log('  npm run deploy -- logs      # 查看日志');
+  console.log('  npm run deploy -- stop      # 停止');
   process.exit(0);
 }

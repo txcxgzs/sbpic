@@ -1,20 +1,24 @@
 import nodemailer from 'nodemailer';
-import { config } from '../config';
+import { getSetting, getSettingNum, registerRebuilder } from './settings';
 
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter(): nodemailer.Transporter | null {
-  if (!config.mail.enabled) return null;
-  if (!config.mail.host || !config.mail.user || !config.mail.pass) {
+  if (getSetting('mail_enabled') !== 'true') return null;
+  const host = getSetting('smtp_host');
+  const user = getSetting('smtp_user');
+  const pass = getSetting('smtp_pass');
+  if (!host || !user || !pass) {
     console.warn('[mail] SMTP 未完整配置，发信功能不可用');
     return null;
   }
   if (!transporter) {
+    const port = getSettingNum('smtp_port', 587);
     transporter = nodemailer.createTransport({
-      host: config.mail.host,
-      port: config.mail.port,
-      secure: config.mail.port === 465,
-      auth: { user: config.mail.user, pass: config.mail.pass },
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
       pool: true,
       maxConnections: 5,
       maxMessages: 100,
@@ -23,6 +27,13 @@ function getTransporter(): nodemailer.Transporter | null {
   }
   return transporter;
 }
+
+/** admin 保存邮件配置后触发：丢弃缓存的 transporter，下次发信重建 */
+export function resetTransporter(): void {
+  transporter = null;
+}
+
+registerRebuilder(resetTransporter);
 
 export async function sendMail(
   to: string,
@@ -37,7 +48,7 @@ export async function sendMail(
   }
   try {
     await t.sendMail({
-      from: config.mail.from || config.mail.user,
+      from: getSetting('smtp_from') || getSetting('smtp_user'),
       to,
       subject,
       html,

@@ -9,7 +9,7 @@ import {
   isEmailTakenByVerified,
   AuthError,
 } from '../services/auth';
-import { config } from '../config';
+import { getSettingBool } from '../services/settings';
 
 const router = Router();
 
@@ -50,7 +50,7 @@ router.post('/api/account/email', requireLogin, async (req: Request, res: Respon
     res.status(400).json({ error: '邮箱格式不正确' });
     return;
   }
-  if (!config.mail.enabled) {
+  if (!getSettingBool('mail_enabled')) {
     res.status(400).json({ error: '邮件功能未启用，无法修改邮箱' });
     return;
   }

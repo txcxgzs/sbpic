@@ -36,3 +36,9 @@ export interface UserRow {
   email_verified: number;
   created_at: Date;
 }
+
+export interface SettingRow {
+  key: string;
+  value: string | null;
+  updated_at: Date;
+}

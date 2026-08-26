@@ -1,4 +1,4 @@
-import { config } from '../config';
+import { getSetting, getSettingBool } from './settings';
 
 interface TurnstileVerifyResponse {
   success: boolean;
@@ -17,8 +17,9 @@ export async function verifyTurnstileToken(
   token: string | undefined,
   remoteip?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  if (!config.turnstile.enabled) return { ok: true };
-  if (!config.turnstile.secretKey) {
+  if (!getSettingBool('turnstile_enabled')) return { ok: true };
+  const secretKey = getSetting('turnstile_secret_key');
+  if (!secretKey) {
     // 配了 enabled 但没填 secret，视为校验失败
     return { ok: false, error: '人机验证未配置' };
   }
@@ -26,7 +27,7 @@ export async function verifyTurnstileToken(
 
   try {
     const body = new URLSearchParams();
-    body.append('secret', config.turnstile.secretKey);
+    body.append('secret', secretKey);
     body.append('response', token);
     if (remoteip) body.append('remoteip', remoteip);
 
@@ -45,9 +46,9 @@ export async function verifyTurnstileToken(
 }
 
 export function turnstileSiteKey(): string {
-  return config.turnstile.siteKey;
+  return getSetting('turnstile_site_key');
 }
 
 export function turnstileEnabled(): boolean {
-  return config.turnstile.enabled && !!config.turnstile.siteKey;
+  return getSettingBool('turnstile_enabled') && !!getSetting('turnstile_site_key');
 }

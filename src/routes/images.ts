@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requireLogin, requireAdmin } from '../middleware/auth';
 import { listImages, getImageById, deleteImageById, canDelete } from '../services/images';
 import { ImageRow } from '../db/pool';
-import { config } from '../config';
+import { getSetting } from '../services/settings';
 
 const router = Router();
 
@@ -10,7 +10,7 @@ function rowToApi(row: ImageRow) {
   return {
     id: row.id,
     key: row.key,
-    url: `${config.baseUrl}/i/${row.key}`,
+    url: `${getSetting('base_url')}/i/${row.key}`,
     hash: row.hash,
     original_name: row.original_name,
     size: row.size,

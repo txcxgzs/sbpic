@@ -23,19 +23,12 @@ const mockR2 = {
 const r2Abs = require.resolve(path.join(process.cwd(), 'dist', 'r2', 'client.js'));
 require.cache[r2Abs] = { id: r2Abs, filename: r2Abs, loaded: true, exports: mockR2, paths: [], children: [], parent: null };
 
-// ===== 环境变量（邮件关闭→注册即已验证；Turnstile 关闭→不校验）=====
+// ===== 环境变量（仅启动必需项；R2/邮件/Turnstile/限流等由 settings 表初始化默认值）=====
 Object.assign(process.env, {
-  PORT: '3125', BASE_URL: 'http://localhost:3125', APP_URL: 'http://localhost:3125',
-  MAX_SIZE_MB: '20', RATE_LIMIT_PER_MIN: '1000',
-  R2_ACCOUNT_ID: 'test', R2_ACCESS_KEY_ID: 'test', R2_SECRET_ACCESS_KEY: 'test', R2_BUCKET: 'sbimg',
+  PORT: '3125',
   DB_HOST: '127.0.0.1', DB_PORT: '3306', DB_USER: 'sbimg', DB_PASSWORD: 'sbimgpw123', DB_NAME: 'sbimg',
   SESSION_SECRET: 'test-secret-at-least-16-chars!!', TRUST_PROXY: '0', COOKIE_SECURE: 'false',
   INIT_ADMIN_USER: 'admin', INIT_ADMIN_PASS: 'adminpass123',
-  ALLOW_REGISTER: 'true', REGISTER_LIMIT_PER_10MIN: '1000',
-  MAIL_ENABLED: 'false',
-  TURNSTILE_ENABLED: 'false',
-  GLOBAL_LIMIT_PER_MIN: '1000', UPLOAD_LIMIT_PER_MIN: '1000', UPLOAD_LIMIT_PER_USER_PER_MIN: '1000',
-  VIEW_LIMIT_PER_MIN: '1000', UPLOAD_CONCURRENCY: '1000',
 });
 
 let cookieA = '', cookieB = '';
@@ -93,7 +86,18 @@ const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
   try {
     const { pool } = require(path.join(process.cwd(), 'dist', 'db', 'pool'));
     const { migrate } = require(path.join(process.cwd(), 'dist', 'db', 'migrate'));
+    const { saveSettings } = require(path.join(process.cwd(), 'dist', 'services', 'settings'));
     await migrate();
+    // 测试用：放宽限流 + 校准 base_url/邮件/Turnstile（这些配置已从 .env 移到 settings 表）
+    await saveSettings({
+      base_url: 'http://localhost:3125', app_url: 'http://localhost:3125',
+      mail_enabled: 'false', turnstile_enabled: 'false',
+      allow_register: 'true', register_limit_per_10min: '1000',
+      global_limit_per_min: '1000', upload_limit_per_min: '1000',
+      upload_limit_per_user_per_min: '1000', view_limit_per_min: '1000',
+      upload_concurrency: '1000',
+      r2_account_id: 'test', r2_access_key_id: 'test', r2_secret_access_key: 'test', r2_bucket: 'sbimg',
+    });
     await pool.query('DELETE FROM images');
     await pool.query('DELETE FROM email_verifications');
     await pool.query('DELETE FROM users');

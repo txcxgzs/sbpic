@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { config } from '../config';
 import {
   getUserByUsername,
   verifyPassword,
@@ -13,6 +12,7 @@ import {
   resetEmailVerification,
 } from '../services/auth';
 import { verifyTurnstileToken, turnstileSiteKey, turnstileEnabled } from '../services/turnstile';
+import { getSetting, getSettingBool } from '../services/settings';
 import {
   registerLimiter,
   loginLimiter,
@@ -73,9 +73,9 @@ router.post('/api/auth/login', loginLimiter, async (req: Request, res: Response)
   res.json(publicUser(user));
 });
 
-// 注册（开放，可由 env 关闭；邮箱验证激活）
+// 注册（开放，可由后台配置关闭；邮箱验证激活）
 router.post('/api/auth/register', registerLimiter, async (req: Request, res: Response) => {
-  if (!config.allowRegister) {
+  if (!getSettingBool('allow_register')) {
     res.status(403).json({ error: '已关闭注册' });
     return;
   }
@@ -106,7 +106,7 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
 
   try {
     // 邮件启用：创建未验证用户并发激活邮件
-    if (config.mail.enabled) {
+    if (getSettingBool('mail_enabled')) {
       const { isEmailTakenByVerified } = await import('../services/auth');
       if (await isEmailTakenByVerified(email)) {
         res.status(409).json({ error: '该邮箱已被使用' });
@@ -150,7 +150,7 @@ router.get('/api/auth/verify-email', async (req: Request, res: Response) => {
       `<div style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:24px;text-align:center;color:#222;">
         <h2>邮箱验证成功</h2>
         <p>账号 <b>${escapeHtml(user.username)}</b> 已激活，现在可以上传图片了。</p>
-        <p><a href="${config.mail.appUrl}/">返回图床</a></p>
+        <p><a href="${getSetting('app_url')}/">返回图床</a></p>
       </div>`,
     );
   } catch (err) {
@@ -158,7 +158,7 @@ router.get('/api/auth/verify-email', async (req: Request, res: Response) => {
     res.status(err instanceof AuthError ? err.status : 500).type('text/html').send(
       `<div style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:24px;text-align:center;color:#222;">
         <h2>验证失败</h2><p>${escapeHtml(msg)}</p>
-        <p><a href="${config.mail.appUrl}/">返回</a></p>
+        <p><a href="${getSetting('app_url')}/">返回</a></p>
       </div>`,
     );
   }

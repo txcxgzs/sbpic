@@ -4,6 +4,7 @@
 
 ## 特性
 
+- **后台界面配置**：R2 / 邮件 / Turnstile / 限流 / 站点 URL 等全部在后台「系统设置」页面配，改完即时生效无需重启；.env 只保留数据库连接和 session
 - **多用户后台**：管理员 + 普通用户两级权限，服务端 session，开放注册（可关）
 - **邮箱验证注册**：注册需填邮箱，收到验证链接激活后才能上传；支持改邮箱后重新验证
 - **Turnstile 人机验证**：注册表单集成 Cloudflare Turnstile，防止机器人批量注册
@@ -28,15 +29,17 @@ Node.js + Express + TypeScript，MySQL（用户/元数据/session），Cloudflar
 sbimg/
 ├── src/
 │   ├── index.ts            # 入口
-│   ├── config.ts           # 环境变量 + zod 校验
-│   ├── db/                 # 连接池 / 建表迁移（幂等加列）
-│   ├── r2/client.ts        # R2 (S3) 封装
+│   ├── config.ts           # 引导配置（.env: DB/session/port/admin）
+│   ├── db/                 # 连接池 / 建表迁移（含 settings 表 + 默认值初始化）
+│   ├── r2/client.ts        # R2 (S3) 封装（懒重建，配置改完即时生效）
 │   ├── middleware/         # session 鉴权 / API token / 分层限流 / 并发控制 / 安全头 / 错误处理
-│   ├── services/           # auth(注册登录验证) / users(用户CRUD) / hash / upload / images / mail / turnstile
-│   ├── routes/             # auth / account / admin / upload / images / view / page
+│   ├── services/           # auth / users / hash / upload / images / mail / turnstile / settings(动态配置)
+│   ├── routes/             # auth / account / admin / settings / upload / images / view / page
 │   ├── types/              # 第三方模块类型声明
-│   └── views/index.html   # 管理页面（登录/注册/Turnstile/控制台/管理）
+│   └── views/index.html   # 管理页面（登录/注册/控制台/管理/系统设置）
 ├── scripts/
+│   ├── setup.js            # 首次安装（MySQL + 端口 + 管理员）
+│   ├── deploy.js           # 一键部署（编译 + 启动/重启）
 │   ├── copy-assets.js      # 构建后复制静态资源
 │   └── test-upload-flow.js # 集成测试（多用户全流程）
 ├── package.json
@@ -74,7 +77,9 @@ cd sbimg
 npm run setup
 ```
 
-`npm run setup` 会先列出需要准备好的东西让你确认，再交互式引导填写配置（回车用默认值）：安装依赖 → 填 R2/MySQL/域名（可选 root 自动建库）→ 生成 `.env`（含随机 SESSION_SECRET）→ 编译。
+`npm run setup` 会先列出需要准备好的东西让你确认，再交互式引导填写配置：安装依赖 → 填 MySQL 连接 + 服务端口 + 初始管理员 → 生成 `.env`（含随机 SESSION_SECRET）→ 编译。
+
+> **R2 / 邮件 / Turnstile / 限流 / 站点 URL 等不在 setup 里填**——启动后登录后台「系统设置」页面配，改完即时生效无需重启。
 
 > 如果已 clone 到别处（如 `/root/sbimg`），可以挪过来：`mv /root/sbimg /www/wwwroot/你的域名/sbimg && cd /www/wwwroot/你的域名/sbimg`，再 `npm run setup`。
 
@@ -91,12 +96,19 @@ npm run deploy -- stop      # 停止
 
 添加反向代理，目标 URL 填 `http://127.0.0.1:8321`（应用默认监听 8321，避开常用端口冲突）。
 
-#### 6. 编辑 .env 对齐域名与 HTTPS
+#### 6. 登录后台配置业务参数
+
+浏览器打开 `http://你的IP:8321`（或反代后的域名），用 setup 时设的管理员账号登录。进入「系统设置」页面，填写：
+
+- **Cloudflare R2**：Account ID / Access Key / Secret Key / Bucket
+- **站点 URL**：Base URL 和 App URL 改成你的实际域名
+- **邮件 SMTP**（可选）：开启后注册需邮箱验证
+- **Turnstile**（可选）：开启后注册需人机验证
+
+保存后即时生效，无需重启。其余 `.env` 仅保留 TRUST_PROXY / COOKIE_SECURE 两个反代相关项（见下方）。
 
 ```bash
-# 在项目目录编辑 .env，确认这几项
-BASE_URL=https://你的域名
-APP_URL=https://你的域名
+# 在项目目录编辑 .env，确认这两项（反代/HTTPS 相关）
 TRUST_PROXY=1
 COOKIE_SECURE=true   # HTTPS 下设 true
 ```
@@ -108,13 +120,7 @@ COOKIE_SECURE=true   # HTTPS 下设 true
 
 ### 手动部署（非宝塔）
 
-#### 1. 获取 R2 凭据
-
-1. Cloudflare 控制台 → R2 → 创建一个 bucket（如 `sbimg`）
-2. R2 → 管理 R2 API 令牌 → 创建 API 令牌，权限选「对象读和写」
-3. 记下 `Account ID`、`Access Key ID`、`Secret Access Key`
-
-#### 2. 准备 MySQL
+#### 1. 准备 MySQL
 
 ```sql
 CREATE DATABASE sbimg CHARACTER SET utf8mb4;
@@ -125,16 +131,20 @@ FLUSH PRIVILEGES;
 
 表会在服务启动时自动创建，无需手动建表。
 
-#### 3. 安装 + 启动
+#### 2. 安装 + 启动
 
 ```bash
 git clone <repo> sbimg
 cd sbimg
-npm run setup    # 交互式引导，生成 .env 并编译
+npm run setup    # 交互式引导，填 MySQL + 端口 + 管理员，生成 .env 并编译
 npm run deploy   # 启动/重启
 ```
 
 > 也可手动：`npm install` → `cp .env.example .env` 编辑配置 → `npm run build`。完整环境变量说明见 `.env.example` 注释。
+
+#### 3. 登录后台配置 R2 等业务参数
+
+浏览器打开 `http://你的IP:8321`，用管理员账号登录，进入「系统设置」页面配置 R2 / 邮件 / Turnstile / 限流 / 站点 URL，保存即时生效。
 
 #### 4. PM2 开机自启（可选）
 
@@ -174,8 +184,8 @@ server {
 
 ### 邮箱验证
 
-- 注册需填邮箱，`MAIL_ENABLED=true` 时创建未验证用户并发验证邮件，用户点链接激活后才能上传
-- `MAIL_ENABLED=false` 时注册直接创建已验证用户（本地调试/应急用）
+- 注册需填邮箱，后台「系统设置」开启邮件功能时创建未验证用户并发验证邮件，用户点链接激活后才能上传
+- 邮件功能未开启时注册直接创建已验证用户（本地调试/应急用）
 - 邮箱唯一性在「激活时」由程序层检查（同一邮箱可有未验证的待激活记录，但只能有一个已验证）
 - 已登录未验证用户可点「重发验证邮件」（限频 10 分钟一次）
 - 管理员可在用户表手动标记已验证（应急）
@@ -184,7 +194,7 @@ server {
 ### Turnstile 人机验证
 
 - 仅在注册表单启用，防止机器人批量注册
-- `TURNSTILE_ENABLED=false` 或未填 SITE_KEY 时不渲染 widget、不校验
+- 后台「系统设置」关闭 Turnstile 或未填 Site Key 时不渲染 widget、不校验
 - 前端从 `/api/auth/turnstile-key` 获取 site key 决定是否渲染
 
 ## API
@@ -194,7 +204,7 @@ server {
 ```
 GET    /api/auth/turnstile-key           获取 Turnstile site key（enabled + siteKey）
 POST   /api/auth/login     {username, password}   登录，建 session
-POST   /api/auth/register  {username, email, password, turnstileToken}  注册（受 ALLOW_REGISTER + Turnstile + 邮箱验证）
+POST   /api/auth/register  {username, email, password, turnstileToken}  注册（受后台注册开关 + Turnstile + 邮箱验证）
 GET    /api/auth/verify-email?token=xxx   邮箱激活（返回 HTML 成功/失败页）
 POST   /api/auth/resend-verification      已登录未验证用户重发验证邮件（限频）
 POST   /api/auth/logout                            登出
@@ -265,6 +275,17 @@ POST   /api/admin/users/:id/reset-token     重置某用户 API token
 POST   /api/admin/users/:id/password        {newPassword} 改某用户密码
 POST   /api/admin/users/:id/verify           手动标记用户邮箱已验证（应急）
 ```
+
+### 系统设置（管理员）
+
+```
+GET    /api/admin/settings                  读取全部配置（secret 项脱敏，只回 has_value 标记）
+POST   /api/admin/settings                  {key: value, ...} 批量保存配置（secret 字段传空串或 __unchanged__ 保持原值）
+```
+
+配置项：`r2_account_id` / `r2_access_key_id` / `r2_secret_access_key` / `r2_bucket` / `mail_enabled` / `smtp_host` / `smtp_port` / `smtp_user` / `smtp_pass` / `smtp_from` / `app_url` / `turnstile_enabled` / `turnstile_site_key` / `turnstile_secret_key` / `allow_register` / `register_limit_per_10min` / `max_size_mb` / `base_url` / `global_limit_per_min` / `upload_limit_per_min` / `upload_limit_per_user_per_min` / `view_limit_per_min` / `login_fail_threshold` / `login_ban_minutes` / `upload_concurrency`
+
+保存后即时生效（R2 客户端 / 邮件 transporter 自动重建，限流参数实时读取），无需重启。
 
 ## 客户端配置
 

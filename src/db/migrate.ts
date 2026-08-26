@@ -1,5 +1,6 @@
 import { RowDataPacket } from 'mysql2';
 import { pool } from './pool';
+import { SETTING_DEFAULTS } from '../services/settings';
 
 let ran = false;
 
@@ -46,6 +47,13 @@ const EMAIL_VERIF_TABLE = `CREATE TABLE IF NOT EXISTS \`email_verifications\` (
   KEY \`idx_user\` (\`user_id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
 
+const SETTINGS_TABLE = `CREATE TABLE IF NOT EXISTS \`settings\` (
+  \`key\` VARCHAR(64) NOT NULL,
+  \`value\` TEXT NULL,
+  \`updated_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (\`key\`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+
 function dbName(): string {
   return process.env.DB_NAME || 'sbimg';
 }
@@ -74,6 +82,7 @@ export async function migrate(): Promise<void> {
     await conn.query(IMAGES_TABLE);
     await conn.query(USERS_TABLE);
     await conn.query(EMAIL_VERIF_TABLE);
+    await conn.query(SETTINGS_TABLE);
 
     // 幂等加列（老库升级）
     if (!(await columnExists('images', 'user_id'))) {
@@ -87,6 +96,20 @@ export async function migrate(): Promise<void> {
     }
     if (!(await columnExists('users', 'email_verified'))) {
       await conn.query('ALTER TABLE `users` ADD COLUMN `email_verified` TINYINT(1) NOT NULL DEFAULT 0');
+    }
+
+    // 初始化 settings 默认值（仅对尚不存在的 key 插入）
+    const [settingRows] = await conn.query<RowDataPacket[]>(
+      'SELECT `key` FROM `settings`',
+    );
+    const existingKeys = new Set(settingRows.map((r) => r.key as string));
+    for (const [key, value] of Object.entries(SETTING_DEFAULTS)) {
+      if (!existingKeys.has(key)) {
+        await conn.query(
+          'INSERT INTO `settings` (`key`, `value`) VALUES (?, ?)',
+          [key, value],
+        );
+      }
     }
 
     // 清理过期未消费的验证记录

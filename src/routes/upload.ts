@@ -3,16 +3,17 @@ import multer from 'multer';
 import { requireApiToken } from '../middleware/auth';
 import { uploadRateLimiter, uploadUserLimiter } from '../middleware/rateLimit';
 import { uploadConcurrency } from '../middleware/concurrency';
-import { config } from '../config';
 import { uploadImage, buildLinks, UploadError } from '../services/upload';
 
 const router = Router();
 
-// 内存存储，文件不落盘；大小上限由 config 控制
+// 内存存储，文件不落盘
+// multer 的 fileSize 设一个硬上限（100MB）做传输层兜底；
+// 实际大小限制由 uploadImage 内部读后台 settings 的 max_size_mb 强制
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: config.maxSizeBytes },
+  limits: { fileSize: 100 * 1024 * 1024 },
 });
 
 function pickFile(req: Request): Express.Multer.File | null {

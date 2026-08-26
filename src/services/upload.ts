@@ -1,8 +1,8 @@
 import { Readable } from 'stream';
 import { RowDataPacket } from 'mysql2';
-import { config } from '../config';
 import { pool, ImageRow } from '../db/pool';
 import { putObject } from '../r2/client';
+import { getSetting, getSettingNum } from './settings';
 import { sha256, extFromName, extFromStandardMime, normalizeSniffedMime } from './hash';
 import imageSize from 'image-size';
 
@@ -39,7 +39,7 @@ function buildKey(hash: string, ext: string): string {
 }
 
 function buildUrl(key: string): string {
-  return `${config.baseUrl}/i/${key}`;
+  return `${getSetting('base_url')}/i/${key}`;
 }
 
 export async function uploadImage(
@@ -48,9 +48,10 @@ export async function uploadImage(
   originalName: string | undefined,
   userId: number | null,
 ): Promise<UploadResult> {
-  if (fileBuffer.length > config.maxSizeBytes) {
+  const maxSizeBytes = getSettingNum('max_size_mb', 20) * 1024 * 1024;
+  if (fileBuffer.length > maxSizeBytes) {
     throw new UploadError(
-      `文件过大: ${fileBuffer.length} 字节，上限 ${config.maxSizeBytes} 字节`,
+      `文件过大: ${fileBuffer.length} 字节，上限 ${maxSizeBytes} 字节`,
       413,
     );
   }

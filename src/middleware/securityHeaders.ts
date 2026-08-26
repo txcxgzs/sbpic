@@ -1,10 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 
-// 管理页面等前端需要内联脚本，故 CSP 不限制脚本（图床小项目，平衡安全与可用）；
-// 关键是防点击劫持和类型嗅探。图片代理 /i/* 路由会自行覆盖头。
+// CSP：允许内联脚本/样式（前端单页需要）+ Cloudflare Turnstile 脚本；
+// 图片允许 data/blob/https（外链图床、内联预览）；其余默认 self。
+// /i/* 图片代理路由会在响应时覆盖头。
 export const securityHeaders = helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://challenges.cloudflare.com'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      connectSrc: ["'self'", 'https://challenges.cloudflare.com'],
+      frameSrc: ["'self'", 'https://challenges.cloudflare.com'],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   frameguard: { action: 'deny' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },

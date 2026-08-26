@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getObjectStream, R2Error } from '../r2/client';
 import { viewLimiter } from '../middleware/rateLimit';
+import { getImageByKey } from '../services/images';
 
 const router = Router();
 
@@ -9,6 +10,13 @@ router.get('/i/*', viewLimiter, async (req: Request, res: Response) => {
   const key = req.params[0];
   if (!key) {
     res.status(404).send('Not Found');
+    return;
+  }
+
+  // 先查库：禁用图片禁止公开访问
+  const row = await getImageByKey(key);
+  if (row && row.disabled) {
+    res.status(403).send('Forbidden');
     return;
   }
 

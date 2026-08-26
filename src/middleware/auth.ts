@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { randomBytes } from 'crypto';
 import { UserRow } from '../db/pool';
 import { getUserByApiToken } from '../services/auth';
 
@@ -31,6 +32,12 @@ async function attachSessionUser(req: Request, _res: Response, next: NextFunctio
     const { getUserById } = await import('../services/auth');
     const user = await getUserById(req.session.userId);
     if (user) {
+      if (user.disabled) {
+        // 账号已被禁用：销毁 session，不再挂载用户
+        req.session.destroy(() => {});
+        next();
+        return;
+      }
       req.user = user;
     } else {
       // 用户被删，清 session
@@ -70,8 +77,43 @@ async function requireApiToken(req: Request, res: Response, next: NextFunction):
     res.status(401).json({ error: '未授权：token 无效' });
     return;
   }
+  if (user.disabled) {
+    res.status(403).json({ error: '账号已被禁用' });
+    return;
+  }
   req.user = user;
   next();
+}
+
+// ── CSRF 双重提交 Cookie ──────────────────────────────────
+// 登录成功后调用：生成 token 并写 httpOnly=false cookie（前端 JS 可读）
+export function issueCsrfToken(res: Response): string {
+  const token = randomBytes(24).toString('hex');
+  res.cookie('csrf_token', token, {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: false, // 跨 http/https 均可发，前端自行读取
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  return token;
+}
+
+/** CSRF 中间件：对状态变更请求（POST/PUT/PATCH/DELETE）校验 X-CSRF-Token === cookie */
+function csrfCheck(req: Request, res: Response, next: NextFunction): void {
+  const method = req.method.toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+    next();
+    return;
+  }
+  const cookieToken = req.cookies?.csrf_token;
+  const headerToken = req.headers['x-csrf-token'];
+  // 没有 cookie（首次请求/未登录）或两者一致即可
+  if (!cookieToken || cookieToken === headerToken) {
+    next();
+    return;
+  }
+  res.status(403).json({ error: 'CSRF 校验失败' });
 }
 
 export {
@@ -79,4 +121,5 @@ export {
   requireLogin,
   requireAdmin,
   requireApiToken,
+  csrfCheck,
 };

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireLogin, requireAdmin } from '../middleware/auth';
-import { listUsers, resetApiToken, setPassword, deleteUser } from '../services/users';
+import { listUsers, resetApiToken, setPassword, deleteUser, disableUser, enableUser } from '../services/users';
 import { createUser, AuthError, adminMarkVerified } from '../services/auth';
 
 const router = Router();
@@ -14,6 +14,7 @@ function publicUser(u: {
   email_verified: number;
   created_at: Date;
   image_count?: number;
+  disabled?: number;
 }) {
   return {
     id: u.id,
@@ -24,6 +25,7 @@ function publicUser(u: {
     email_verified: !!u.email_verified,
     created_at: u.created_at,
     image_count: u.image_count ?? 0,
+    disabled: !!u.disabled,
   };
 }
 
@@ -134,6 +136,48 @@ router.post('/api/admin/users/:id/verify', requireLogin, requireAdmin, async (re
   }
   try {
     await adminMarkVerified(id);
+    res.json({ success: true });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+// 禁用用户（保留图片，禁止公开访问）
+router.post('/api/admin/users/:id/disable', requireLogin, requireAdmin, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: '无效的 id' });
+    return;
+  }
+  if (id === req.user!.id) {
+    res.status(400).json({ error: '不能禁用自己' });
+    return;
+  }
+  try {
+    await disableUser(id);
+    res.json({ success: true });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+// 启用用户（恢复图片公开访问）
+router.post('/api/admin/users/:id/enable', requireLogin, requireAdmin, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: '无效的 id' });
+    return;
+  }
+  try {
+    await enableUser(id);
     res.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {

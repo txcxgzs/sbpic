@@ -3,6 +3,7 @@ import { RowDataPacket } from 'mysql2';
 import { pool, ImageRow } from '../db/pool';
 import { putObject } from '../r2/client';
 import { getSetting, getSettingNum } from './settings';
+import { getUserStorage } from './images';
 import { sha256, extFromName, extFromStandardMime, normalizeSniffedMime } from './hash';
 import imageSize from 'image-size';
 
@@ -54,6 +55,22 @@ export async function uploadImage(
       `文件过大: ${fileBuffer.length} 字节，上限 ${maxSizeBytes} 字节`,
       413,
     );
+  }
+
+  // 存储配额检查（userId 非空且配额 > 0 时检查）
+  if (userId !== null) {
+    const quotaMb = getSettingNum('user_storage_quota_mb', 0);
+    if (quotaMb > 0) {
+      const usedBytes = await getUserStorage(userId);
+      const quotaBytes = quotaMb * 1024 * 1024;
+      if (usedBytes + fileBuffer.length > quotaBytes) {
+        const usedMb = (usedBytes / 1024 / 1024).toFixed(2);
+        throw new UploadError(
+          `存储空间不足：已用 ${usedMb} MB / 配额 ${quotaMb} MB，无法上传`,
+          413,
+        );
+      }
+    }
   }
 
   // 真实类型嗅探（不信任客户端 mimetype）

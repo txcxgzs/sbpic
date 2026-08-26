@@ -18,6 +18,7 @@ function rowToApi(row: ImageRow) {
     width: row.width,
     height: row.height,
     user_id: row.user_id,
+    disabled: !!row.disabled,
     created_at: row.created_at,
   };
 }
@@ -32,10 +33,11 @@ router.get('/api/images', requireLogin, async (req: Request, res: Response) => {
   let scope;
   if (isAdmin) {
     if (req.query.all === '1') {
-      scope = { userId: null }; // 全部
+      // 管理员看全部时含禁用图片，便于审查
+      scope = { userId: null, includeDisabled: true };
     } else if (req.query.user_id !== undefined) {
       const target = req.query.user_id === 'null' ? null : Number(req.query.user_id);
-      scope = { userId: null, targetUserId: Number.isFinite(target) ? target : null };
+      scope = { userId: null, targetUserId: Number.isFinite(target) ? target : null, includeDisabled: true };
     } else {
       scope = { userId: user.id }; // 管理员默认也只看自己，避免误操作
     }

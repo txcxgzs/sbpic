@@ -47,3 +47,20 @@ export async function deleteUser(userId: number): Promise<void> {
   await pool.query('DELETE FROM `email_verifications` WHERE `user_id` = ?', [userId]);
   await pool.query('DELETE FROM `users` WHERE `id` = ?', [userId]);
 }
+
+export async function disableUser(userId: number): Promise<void> {
+  const user = await getUserById(userId);
+  if (!user) throw new AuthError('用户不存在', 404);
+  if (user.role === 'admin') throw new AuthError('不能禁用管理员', 400);
+  // 禁用用户 + 其名下图片全部禁用（保留数据，禁止公开访问）
+  await pool.query('UPDATE `users` SET `disabled` = 1 WHERE `id` = ?', [userId]);
+  await pool.query('UPDATE `images` SET `disabled` = 1 WHERE `user_id` = ?', [userId]);
+}
+
+export async function enableUser(userId: number): Promise<void> {
+  const user = await getUserById(userId);
+  if (!user) throw new AuthError('用户不存在', 404);
+  // 启用用户 + 恢复其名下图片访问
+  await pool.query('UPDATE `users` SET `disabled` = 0 WHERE `id` = ?', [userId]);
+  await pool.query('UPDATE `images` SET `disabled` = 0 WHERE `user_id` = ?', [userId]);
+}

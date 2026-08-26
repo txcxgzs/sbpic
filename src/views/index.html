@@ -5,266 +5,226 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>烧饼图床 · sbimg</title>
 <style>
-/* ===== @property 动画变量 ===== */
-@property --angle{syntax:"<angle>";inherits:false;initial-value:0deg}
-@property --grad-pos{syntax:"<percentage>";inherits:false;initial-value:0%}
-@property --shine-x{syntax:"<percentage>";inherits:false;initial-value:-120%}
-
+/* ===== Claude Design System ===== */
 :root{
-  --bg:#f5f5f7; --card:#ffffff; --card-2:#f5f5f7; --card-3:#efeff1;
-  --border:#eaeaec; --border-2:#e0e0e3;
-  --text:#1d1d1f; --text-2:#6e6e73; --text-3:#a1a1a6; --text-4:#c7c7cc;
-  --accent:#0071e3; --accent-2:#00a2ff; --accent-soft:#e8f1ff; --accent-soft-2:#d1e4ff;
-  --ok:#34c759; --ok-bg:#e8f9ed; --warn:#ff9f0a; --warn-bg:#fff5e6; --bad:#ff3b30; --bad-bg:#ffeee9;
-  --purple:#af52de; --purple-bg:#f5ecfe; --pink:#ff2d92; --pink-bg:#ffe9f4; --teal:#30b0c7; --teal-bg:#e3f6fa; --indigo:#5856d6; --indigo-bg:#ece9fe;
-  --radius:18px; --radius-sm:12px; --radius-xs:8px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.03);
-  --shadow:0 2px 8px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
-  --shadow-lg:0 24px 60px rgba(0,0,0,.16),0 8px 24px rgba(0,0,0,.08);
+  --canvas:#faf9f5; --ink:#141413; --body:#3d3d3a; --muted:#6c6a64;
+  --coral:#cc785c; --coral-d:#a9583e; --coral-soft:#f0ddd4;
+  --card:#efe9de; --soft:#f5f0e8; --dark:#181715;
+  --hair:#e6dfd8;
+  --ok:#5db872; --warn:#d4a017; --bad:#c64545;
+  --radius:12px; --radius-sm:8px; --radius-xs:6px; --radius-hero:16px;
+  --shadow-sm:0 1px 2px rgba(20,20,19,.04);
+  --shadow:0 2px 8px rgba(20,20,19,.06),0 8px 24px rgba(20,20,19,.04);
+  --shadow-lg:0 12px 40px rgba(20,20,19,.12);
   --spring:cubic-bezier(.22,1,.36,1);
-  --spring-soft:cubic-bezier(.34,1.56,.64,1);
+  --serif:Georgia,'Cormorant Garamond','Times New Roman',serif;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,"Cascadia Code",monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-size:14px;line-height:1.5;letter-spacing:-.01em}
-a{color:var(--accent);text-decoration:none}
-::selection{background:var(--accent-soft-2)}
-::-webkit-scrollbar{width:10px;height:10px}
+body{font-family:var(--sans);background:var(--canvas);color:var(--body);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-size:14px;line-height:1.55;letter-spacing:-.003em}
+a{color:var(--coral);text-decoration:none}
+a:hover{color:var(--coral-d)}
+::selection{background:var(--coral-soft)}
+::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#d1d1d6;border-radius:10px;border:3px solid var(--bg)}
-::-webkit-scrollbar-thumb:hover{background:#b0b0b5}
+::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:#d5cdc4}
+
+/* ===== 通用 ===== */
+.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.02em}
+.mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:var(--radius);padding:24px;margin-bottom:18px;box-shadow:var(--shadow-sm);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow)}
+.card-title{font-family:var(--serif);font-size:18px;font-weight:400;letter-spacing:-.02em;color:var(--ink);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.card-title .sub{font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:400;display:flex;align-items:center;gap:8px}
+.btn{padding:9px 18px;border:1px solid var(--hair);border-radius:var(--radius-sm);background:var(--soft);color:var(--ink);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s var(--spring);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--sans);white-space:nowrap}
+.btn:hover{background:#e8e0d4;border-color:#d5cdc4}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn-primary:hover{background:var(--coral-d);border-color:var(--coral-d);color:#fff}
+.btn-danger{background:transparent;border-color:#e0c4bd;color:var(--bad)}
+.btn-danger:hover{background:#f5e8e4;border-color:#d4a99f;color:var(--bad)}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn-ghost:hover{background:var(--soft);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--soft);border:1px solid var(--hair);border-radius:var(--radius-sm);color:var(--ink);font-size:14px;font-family:var(--sans);transition:.15s}
+.field input::placeholder,.field textarea::placeholder{color:#a8a59f}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--coral);background:var(--canvas);box-shadow:0 0 0 3px var(--coral-soft)}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+.badge{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px;line-height:1.5}
+.badge-ok{background:#e0f0e4;color:var(--ok)}
+.badge-warn{background:#f5edd6;color:var(--warn)}
+.badge-bad{background:#f5e4e2;color:var(--bad)}
+.badge-admin{background:var(--dark);color:var(--canvas)}
+.badge-user{background:var(--soft);color:var(--muted)}
+.badge-disabled{background:#f0e0dd;color:var(--bad)}
 
 /* ===== 布局 ===== */
 .app{display:flex;min-height:100vh}
-.sidebar{width:248px;background:rgba(255,255,255,.8);border-right:1px solid var(--border);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:20;transition:transform .3s var(--spring)}
-.sidebar .logo{padding:26px 22px 20px;display:flex;align-items:center;gap:13px}
-.sidebar .logo .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0071e3,#00a2ff);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;box-shadow:0 4px 12px rgba(0,113,227,.32);animation:logo-breathe 4s ease-in-out infinite alternate}
-@keyframes logo-breathe{from{box-shadow:0 4px 12px rgba(0,113,227,.32)}to{box-shadow:0 4px 20px rgba(0,113,227,.5)}}
-.sidebar .logo .txt{font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
-.sidebar .logo .txt span{display:block;font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:2px;margin-top:2px}
-.nav{flex:1;padding:4px 14px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;position:relative}
-.nav-section{font-size:10px;font-weight:700;color:var(--text-4);letter-spacing:1px;text-transform:uppercase;padding:18px 14px 8px}
-.nav-item{position:relative;display:flex;align-items:center;gap:13px;padding:10px 14px;border-radius:var(--radius-sm);color:var(--text-2);cursor:pointer;font-size:14px;font-weight:500;transition:.18s var(--spring);border:none;background:none;width:100%;text-align:left;font-family:inherit;z-index:1}
-.nav-item:hover{background:rgba(0,0,0,.045);color:var(--text)}
-.nav-item:hover .ico{scale:1.15;rotate:-4deg}
-.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.nav-item.active::before{content:'';position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0;animation:nav-bar-in .3s var(--spring)}
-@keyframes nav-bar-in{from{height:0;opacity:0}to{height:18px;opacity:1}}
-.nav-item .ico{width:22px;text-align:center;flex-shrink:0;font-size:16px;opacity:.7;transition:scale .25s var(--spring-soft),rotate .25s var(--spring-soft)}
-.nav-item.active .ico{opacity:1;scale:1.1}
-.sidebar .foot{padding:16px 22px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);letter-spacing:.2px}
-.main{flex:1;margin-left:248px;min-width:0;display:flex;flex-direction:column;min-height:100vh}
-.topbar{height:64px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;background:rgba(245,245,247,.78);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);z-index:10}
-.topbar .crumb{font-size:18px;font-weight:600;letter-spacing:-.02em;animation:fade-in .3s ease}
-.topbar .crumb .sub{color:var(--text-3);font-weight:400;margin-left:8px;font-size:13px}
-.topbar .user-chip{display:flex;align-items:center;gap:11px;font-size:13px;cursor:pointer;padding:5px 8px 5px 12px;border-radius:30px;transition:.15s}
-.topbar .user-chip:hover{background:rgba(0,0,0,.04)}
-.topbar .user-chip .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0071e3,#00a2ff);border:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;transition:scale .2s var(--spring-soft)}
-.topbar .user-chip:hover .avatar{scale:1.08}
+.sidebar{width:240px;background:var(--soft);border-right:1px solid var(--hair);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:20;transition:transform .3s var(--spring)}
+.sidebar .logo{padding:24px 20px 16px;display:flex;align-items:center;gap:12px}
+.sidebar .logo .mark{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--coral);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:18px;color:#fff;flex-shrink:0}
+.sidebar .logo .txt{font-family:var(--serif);font-size:15px;font-weight:400;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.sidebar .logo .txt span{display:block;font-family:var(--sans);font-size:9px;color:var(--muted);font-weight:600;letter-spacing:2px;margin-top:1px}
+.nav{flex:1;padding:4px 12px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-item{position:relative;display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:var(--radius-sm);color:var(--muted);cursor:pointer;font-size:13.5px;font-weight:500;transition:.15s var(--spring);border:none;background:none;width:100%;text-align:left;font-family:var(--sans)}
+.nav-item:hover{background:var(--canvas);color:var(--ink)}
+.nav-item.active{background:var(--coral-soft);color:var(--coral-d);font-weight:600}
+.nav-item .ico{width:20px;text-align:center;flex-shrink:0;font-size:15px;opacity:.7}
+.nav-item.active .ico{opacity:1}
+.sidebar .foot{padding:14px 20px;border-top:1px solid var(--hair);font-size:10.5px;color:var(--muted);letter-spacing:.2px}
+.main{flex:1;margin-left:240px;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:56px;border-bottom:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;background:rgba(250,249,245,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10}
+.topbar .crumb{font-family:var(--serif);font-size:17px;font-weight:400;letter-spacing:-.02em;color:var(--ink)}
+.topbar .user-chip{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;padding:4px 8px 4px 12px;border-radius:30px;transition:.15s}
+.topbar .user-chip:hover{background:var(--soft)}
+.topbar .user-chip .avatar{width:30px;height:30px;border-radius:50%;background:var(--coral);border:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
 .topbar .user-chip .info{display:flex;flex-direction:column;line-height:1.3;text-align:right}
-.topbar .user-chip .info .name{font-weight:600;font-size:13px;color:var(--text)}
-.topbar .user-chip .info .role{font-size:11px;color:var(--text-3)}
-.content{padding:36px 40px 48px;flex:1;max-width:1240px;width:100%;animation:view-in .4s var(--spring)}
-@keyframes view-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+.topbar .user-chip .info .name{font-weight:500;font-size:12.5px;color:var(--ink)}
+.topbar .user-chip .info .role{font-size:10.5px;color:var(--muted)}
+.content{padding:32px 32px 40px;flex:1;max-width:1200px;width:100%;animation:view-in .3s var(--spring)}
+@keyframes view-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
 
-/* ===== 通用 ===== */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:20px;box-shadow:var(--shadow-sm);transition:box-shadow .3s,translate .3s var(--spring)}
-.card:hover{box-shadow:var(--shadow)}
-.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.02em}
-.card-title .sub{font-size:12px;color:var(--text-3);font-weight:400;display:flex;align-items:center;gap:8px}
-.btn{position:relative;overflow:hidden;padding:10px 20px;border:none;border-radius:100px;background:var(--card-3);color:var(--text);font-size:13.5px;font-weight:500;cursor:pointer;transition:translate .18s var(--spring-soft),scale .18s var(--spring-soft),background .18s,box-shadow .3s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;white-space:nowrap}
-.btn:hover{background:var(--border-2)}
-.btn:active{scale:.96}
-.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(var(--shine-x));pointer-events:none}
-.btn:hover::before{animation:shine .6s ease}
-@keyframes shine{from{--shine-x:-120%}to{--shine-x:120%}}
-.btn-primary{background:linear-gradient(135deg,#0071e3,#0089ff);color:#fff;box-shadow:0 2px 8px rgba(0,113,227,.3)}
-.btn-primary:hover{box-shadow:0 8px 24px -4px rgba(0,113,227,.5);filter:brightness(1.05);background:linear-gradient(135deg,#0071e3,#0089ff)}
-.btn-primary::before{background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%)}
-.btn-danger{background:var(--bad-bg);color:var(--bad)}
-.btn-danger:hover{background:#ffd9d4;color:var(--bad)}
-.btn-sm{padding:7px 16px;font-size:12.5px}
-.btn-ghost{background:transparent;color:var(--text-2)}
-.btn-ghost:hover{background:rgba(0,0,0,.05);color:var(--text)}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.field{margin-bottom:18px}
-.field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:600}
-.field input,.field select,.field textarea{width:100%;padding:12px 15px;background:var(--card-2);border:1.5px solid transparent;border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;transition:.15s}
-.field input::placeholder,.field textarea::placeholder{color:var(--text-4)}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--card);box-shadow:0 0 0 4px var(--accent-soft)}
-.field select{background:var(--card-2);cursor:pointer}
-.field .hint{font-size:11.5px;color:var(--text-3);margin-top:7px;line-height:1.4}
-.badge{font-size:11px;padding:3px 11px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px;line-height:1.5}
-.badge-ok{background:var(--ok-bg);color:var(--ok)}
-.badge-warn{background:var(--warn-bg);color:var(--warn)}
-.badge-bad{background:var(--bad-bg);color:var(--bad)}
-.badge-admin{background:var(--purple-bg);color:var(--purple)}
-.badge-user{background:rgba(0,0,0,.05);color:var(--text-2)}
-.filter-select{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:100px;font-size:12.5px;background:var(--card);font-family:inherit;cursor:pointer;transition:.15s;color:var(--text-2);font-weight:500}
-.filter-select:hover{border-color:var(--accent);color:var(--accent)}
-.filter-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+/* ===== 统计卡 ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--hair);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow-sm);transition:translate .25s var(--spring),box-shadow .25s}
+.stat:hover{translate:0 -3px;box-shadow:var(--shadow)}
+.stat .label{font-size:11.5px;color:var(--muted);margin-bottom:10px;font-weight:500;display:flex;align-items:center;gap:7px}
+.stat .label .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.stat .num{font-family:var(--serif);font-size:30px;font-weight:400;letter-spacing:-.02em;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .sub{font-size:11px;color:var(--muted);margin-top:5px}
 
-/* ===== 骨架屏 shimmer ===== */
-.skeleton{background:var(--card-2);position:relative;overflow:hidden;border-radius:6px}
-.skeleton::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:shimmer 1.5s linear infinite}
-@keyframes shimmer{to{transform:translateX(100%)}}
-.skeleton-line{height:14px;margin-bottom:8px}
-.skeleton-line:last-child{margin-bottom:0;width:60%}
-.stat-skeleton .sk-num{height:32px;width:80px;margin-bottom:8px}
-.stat-skeleton .sk-label{height:12px;width:60px;margin-bottom:12px}
+/* ===== 存储进度条 ===== */
+.storage-bar{background:var(--soft);border-radius:100px;height:6px;overflow:hidden;margin-top:8px}
+.storage-bar .fill{background:var(--coral);height:100%;border-radius:100px;transition:width .5s var(--spring)}
 
-/* ===== 欢迎区 — 动态极光渐变 ===== */
-.hero{border-radius:var(--radius);padding:32px 34px;margin-bottom:22px;color:#fff;position:relative;overflow:hidden;isolation:isolate;box-shadow:0 8px 32px rgba(0,113,227,.25);animation:fade-in .5s ease}
-.hero::before{content:'';position:absolute;inset:-50%;background:conic-gradient(from var(--angle),#0071e3,#00a2ff,#5e5ce6,#af52de,#0071e3);filter:blur(60px);opacity:.6;animation:spin-aurora 10s linear infinite;z-index:-2}
-.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,113,227,.92),rgba(0,162,255,.85) 50%,rgba(94,92,230,.7));z-index:-1}
-@keyframes spin-aurora{to{--angle:360deg}}
-.hero .greet{font-size:13px;opacity:.9;margin-bottom:6px;font-weight:500;animation:fade-in-up .5s .05s both}
-.hero .name{font-size:26px;font-weight:700;letter-spacing:-.03em;position:relative;z-index:1;animation:fade-in-up .5s .1s both}
-.hero .name span{font-weight:400;opacity:.8}
-.hero .desc{font-size:13px;opacity:.8;margin-top:10px;position:relative;z-index:1;animation:fade-in-up .5s .15s both}
-@keyframes fade-in-up{from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0}}
-@keyframes fade-in{from{opacity:0}to{opacity:1}}
+/* ===== 图库网格 ===== */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.gallery-item{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--soft);border:1px solid var(--hair);aspect-ratio:1;cursor:default;transition:box-shadow .2s,translate .2s var(--spring)}
+.gallery-item:hover{box-shadow:var(--shadow);translate:0 -2px}
+.gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s var(--spring)}
+.gallery-item:hover img{transform:scale(1.04)}
+.gallery-item .overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(20,20,19,.75) 0%,transparent 50%);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:10px}
+.gallery-item:hover .overlay{opacity:1}
+.gallery-item .overlay .gname{color:#fff;font-size:11px;font-family:var(--mono);word-break:break-all;line-height:1.3;margin-bottom:6px}
+.gallery-item .overlay .gacts{display:flex;gap:5px;flex-wrap:wrap}
+.gallery-item .overlay .gacts .btn{padding:4px 10px;font-size:11px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(8px)}
+.gallery-item .overlay .gacts .btn:hover{background:rgba(255,255,255,.25)}
+.gallery-item .overlay .gacts .btn-danger{background:rgba(198,69,69,.4);border-color:rgba(198,69,69,.3);color:#fff}
+.gallery-item .overlay .gacts .btn-danger:hover{background:rgba(198,69,69,.6)}
+.gallery-item .gdisabled{position:absolute;top:8px;left:8px;z-index:2}
+.gallery-item.disabled img{filter:grayscale(1) opacity(.4)}
+.gallery-item .gmeta{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:rgba(20,20,19,.7);color:#fff;font-size:10.5px;font-family:var(--mono);opacity:0;transition:opacity .2s}
+.gallery-item:hover .gmeta{opacity:1}
 
-/* ===== 统计卡 — 交错入场 + 悬浮 ===== */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;opacity:0;animation:card-in .5s var(--spring) forwards;transition:translate .3s var(--spring),box-shadow .3s,rotate .3s var(--spring)}
-.stat:hover{translate:0 -4px;box-shadow:var(--shadow)}
-.stat:nth-child(1){animation-delay:.05s}
-.stat:nth-child(2){animation-delay:.12s}
-.stat:nth-child(3){animation-delay:.19s}
-.stat:nth-child(4){animation-delay:.26s}
-.stat:nth-child(5){animation-delay:.33s}
-.stat:nth-child(6){animation-delay:.4s}
-@keyframes card-in{from{opacity:0;translate:0 24px;scale:.96}to{opacity:1;translate:0 0;scale:1}}
-.stat .label{font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:7px}
-.stat .label .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:pulse-dot 2.5s ease-in-out infinite}
-@keyframes pulse-dot{0%,100%{opacity:1;scale:1}50%{opacity:.5;scale:.8}}
-.stat .num{font-size:32px;font-weight:700;letter-spacing:-.03em;color:var(--text);line-height:1.1;font-variant-numeric:tabular-nums}
-.stat .num.counting{animation:count-glow .8s ease}
-@keyframes count-glow{0%{text-shadow:0 0 20px rgba(0,113,227,.5)}100%{text-shadow:none}}
-.stat .sub{font-size:11px;color:var(--text-3);margin-top:6px}
-
-/* ===== 表格 — 行逐条入场 + 扫光悬停 ===== */
-.tbl-wrap{overflow-x:auto;margin:0 -4px}
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{padding:12px 16px;text-align:left;font-weight:600;color:var(--text-3);font-size:11px;letter-spacing:.4px;border-bottom:1.5px solid var(--border);background:transparent;white-space:nowrap;text-transform:uppercase}
-td{padding:15px 16px;border-bottom:1px solid var(--border);color:var(--text);transition:background .15s}
-tbody tr{position:relative;animation:row-in .4s var(--spring) both}
-tbody tr:nth-child(1){animation-delay:.02s}
-tbody tr:nth-child(2){animation-delay:.05s}
-tbody tr:nth-child(3){animation-delay:.08s}
-tbody tr:nth-child(4){animation-delay:.11s}
-tbody tr:nth-child(5){animation-delay:.14s}
-tbody tr:nth-child(6){animation-delay:.17s}
-tbody tr:nth-child(7){animation-delay:.2s}
-tbody tr:nth-child(8){animation-delay:.23s}
-@keyframes row-in{from{opacity:0;translate:-12px 0}to{opacity:1;translate:0 0}}
-tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--card-2)}
-tbody tr::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,113,227,.06),transparent);transform:translateX(-100%);pointer-events:none;transition:transform .6s var(--spring)}
-tbody tr:hover::after{transform:translateX(100%)}
-.mono{font-family:"SF Mono","JetBrains Mono","Cascadia Code",Consolas,monospace;font-size:12px;color:var(--text-2)}
-.muted{color:var(--text-3)}
-.thumb{width:46px;height:46px;border-radius:var(--radius-xs);object-fit:cover;background:var(--card-2);border:none;transition:scale .2s var(--spring-soft)}
-tr:hover .thumb{scale:1.1}
-.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px;flex-wrap:wrap}
-.pager button{min-width:38px;height:38px}
-.empty{text-align:center;padding:56px 20px;color:var(--text-3);font-size:14px;animation:fade-in .4s ease}
-.empty .ico{font-size:40px;opacity:.25;margin-bottom:14px;display:block;animation:empty-float 3s ease-in-out infinite alternate}
-@keyframes empty-float{from{translate:0 0}to{translate:0 -6px}}
+/* ===== 分页 ===== */
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.pager button{min-width:36px;height:36px}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px}
+.empty .ico{font-size:36px;opacity:.2;margin-bottom:12px;display:block}
 
 /* ===== 上传区 ===== */
-.drop{border:2px dashed var(--border-2);border-radius:var(--radius);padding:56px 24px;text-align:center;cursor:pointer;transition:.2s var(--spring);background:var(--card-2);position:relative;overflow:hidden}
-.drop:hover{border-color:var(--accent);background:var(--accent-soft);translate:0 -2px}
-.drop.drag{border-color:var(--accent);background:var(--accent-soft);scale:1.005;border-style:solid}
-.drop.drag::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(0,113,227,.15) 0 12px,transparent 12px 24px);background-size:200% 100%;animation:march .5s linear infinite;pointer-events:none}
-@keyframes march{to{background-position:24px 0}}
-.drop .big-ico{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent-soft),var(--accent-soft-2));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;color:var(--accent);transition:.3s var(--spring-soft);animation:bounce-idle 3s ease-in-out infinite}
-@keyframes bounce-idle{0%,100%{translate:0 0}50%{translate:0 -6px}}
-.drop:hover .big-ico{scale:1.1;rotate:-5deg;box-shadow:0 8px 24px rgba(0,113,227,.25)}
-.drop .t1{font-size:16px;color:var(--text);margin-bottom:6px;font-weight:600}
-.drop .t2{font-size:13px;color:var(--text-3)}
+.drop{border:2px dashed var(--hair);border-radius:var(--radius);padding:48px 24px;text-align:center;cursor:pointer;transition:.2s var(--spring);background:var(--soft);position:relative;overflow:hidden}
+.drop:hover{border-color:var(--coral);background:var(--coral-soft)}
+.drop.drag{border-color:var(--coral);background:var(--coral-soft);border-style:solid}
+.drop .big-ico{width:60px;height:60px;border-radius:var(--radius);background:var(--coral-soft);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;color:var(--coral);transition:.25s var(--spring)}
+.drop:hover .big-ico{transform:scale(1.08)}
+.drop .t1{font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:5px;font-weight:400;letter-spacing:-.02em}
+.drop .t2{font-size:12.5px;color:var(--muted)}
 .drop.disabled{opacity:.5;cursor:not-allowed}
-.drop.disabled .big-ico{animation:none}
-.upload-results{margin-top:20px;display:flex;flex-direction:column;gap:12px}
-.upload-item{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;box-shadow:var(--shadow-sm);animation:slideUp .35s var(--spring)}
-.upload-item img{width:58px;height:58px;border-radius:var(--radius-xs);object-fit:cover;background:var(--card-2);flex-shrink:0;border:none}
+.upload-results{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.upload-item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--hair);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow-sm);animation:slideUp .3s var(--spring)}
+@keyframes slideUp{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+.upload-item img{width:52px;height:52px;border-radius:var(--radius-sm);object-fit:cover;background:var(--soft);flex-shrink:0}
 .upload-item .meta{flex:1;min-width:0}
-.upload-item .name{font-size:13.5px;word-break:break-all;font-weight:500}
-.upload-item .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.chip{font-size:11.5px;padding:5px 12px;border-radius:20px;background:var(--card-3);border:none;color:var(--text-2);cursor:pointer;user-select:none;transition:.15s;font-weight:500}
-.chip:hover{background:var(--accent-soft);color:var(--accent)}
-.chip-url{background:var(--accent-soft);color:var(--accent)}
-.tag-dedup{font-size:10px;padding:3px 9px;border-radius:6px;background:var(--warn-bg);color:var(--warn);margin-left:6px;font-weight:600}
+.upload-item .name{font-size:13px;word-break:break-all;font-weight:500;color:var(--ink)}
+.upload-item .url-box{margin-top:8px;display:flex;gap:6px;align-items:center}
+.upload-item .url-box input{flex:1;min-width:0;padding:7px 10px;background:var(--soft);border:1px solid var(--hair);border-radius:var(--radius-sm);font-family:var(--mono);font-size:11.5px;color:var(--body);user-select:all;cursor:text}
+.upload-item .url-box input:focus{outline:none;border-color:var(--coral)}
+.upload-item .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--soft);border:1px solid var(--hair);color:var(--muted);cursor:pointer;user-select:none;transition:.15s;font-weight:500}
+.chip:hover{background:var(--coral-soft);border-color:var(--coral);color:var(--coral-d)}
+.chip-url{background:var(--coral-soft);border-color:#e0c4bd;color:var(--coral-d)}
+.tag-dedup{font-size:10px;padding:2px 8px;border-radius:4px;background:#f5edd6;color:var(--warn);margin-left:5px;font-weight:600}
 
-/* ===== 信息行（只读展示） ===== */
-.info-row{display:flex;align-items:center;justify-content:space-between;padding:17px 0;border-bottom:1px solid var(--border);gap:16px;transition:background .15s}
-.info-row:hover{background:var(--card-2);border-radius:8px}
+/* ===== 信息行 ===== */
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--hair);gap:16px;transition:background .12s}
 .info-row:last-child{border-bottom:none;padding-bottom:0}
 .info-row:first-child{padding-top:0}
-.info-row .left{display:flex;flex-direction:column;gap:4px;min-width:0}
-.info-row .label{font-size:12px;color:var(--text-3);font-weight:500}
-.info-row .value{font-size:14.5px;color:var(--text);font-weight:500;word-break:break-all}
-.info-row .value .muted{color:var(--text-3);font-weight:400}
-.info-row .right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.info-row:hover{background:var(--soft);border-radius:var(--radius-sm);padding-left:8px;padding-right:8px}
+.info-row .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.info-row .label{font-size:11.5px;color:var(--muted);font-weight:500}
+.info-row .value{font-size:14px;color:var(--ink);font-weight:500;word-break:break-all}
+.info-row .right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 
 /* ===== Banner ===== */
-.banner{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:13.5px;border:none;line-height:1.5;animation:fade-in .4s ease}
-.banner-warn{background:var(--warn-bg);color:var(--warn)}
+.banner{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:13px;line-height:1.5;border:1px solid}
+.banner-warn{background:#f5edd6;border-color:#e8dcaf;color:var(--warn)}
 
 /* ===== Modal ===== */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:90px}
-.modal-overlay.show{display:flex;animation:fadeIn .25s ease}
-.modal{background:var(--card);border:none;border-radius:var(--radius);width:480px;max-width:92vw;box-shadow:var(--shadow-lg);animation:modalIn .4s var(--spring-soft);overflow:hidden}
-@keyframes modalIn{from{opacity:0;scale:.92;translate:0 16px}to{opacity:1;scale:1;translate:0 0}}
-.modal-head{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-head .title{font-size:17px;font-weight:600;letter-spacing:-.02em}
-.modal-head .close{cursor:pointer;color:var(--text-3);font-size:20px;background:var(--card-3);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;line-height:1;transition:rotate .25s var(--spring-soft),background .15s,color .15s}
-.modal-head .close:hover{background:var(--border-2);color:var(--text);rotate:90deg}
-.modal-body{padding:26px}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,20,19,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+.modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--canvas);border:1px solid var(--hair);border-radius:var(--radius);width:460px;max-width:92vw;box-shadow:var(--shadow-lg);animation:modalIn .35s var(--spring);overflow:hidden}
+@keyframes modalIn{from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0}}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between}
+.modal-head .title{font-family:var(--serif);font-size:18px;font-weight:400;letter-spacing:-.02em;color:var(--ink)}
+.modal-head .close{cursor:pointer;color:var(--muted);font-size:20px;background:var(--soft);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
+.modal-head .close:hover{background:var(--hair);color:var(--ink)}
+.modal-body{padding:24px}
 .modal-body .field:last-child{margin-bottom:0}
-.modal-foot{padding:18px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--card-2)}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--hair);display:flex;justify-content:flex-end;gap:8px;background:var(--soft)}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-/* ===== Toast — 倒计时进度条 ===== */
-.toast{position:fixed;bottom:36px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(29,29,31,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#fff;padding:13px 24px 16px;border-radius:30px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transition:transform .35s var(--spring-soft),opacity .3s;pointer-events:none;z-index:200;overflow:hidden}
+/* ===== Toast ===== */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:var(--canvas);padding:12px 22px;border-radius:30px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transition:transform .3s var(--spring),opacity .25s;pointer-events:none;z-index:200}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.ok{background:rgba(52,199,89,.94)}
-.toast.bad{background:rgba(255,59,48,.94)}
-.toast::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,255,255,.5);transform-origin:left;transform:scaleX(0)}
-.toast.show::after{animation:toast-shrink 2s linear forwards}
-@keyframes toast-shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.toast.ok{background:#3d6b48}
+.toast.bad{background:#8a3939}
 
-/* ===== Auth 页 — 动态光晕 ===== */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
-.auth-wrap::before{content:'';position:absolute;top:-20%;left:-10%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,113,227,.12),transparent 65%);pointer-events:none;animation:float-orb 12s ease-in-out infinite alternate}
-.auth-wrap::after{content:'';position:absolute;bottom:-20%;right:-10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(175,82,222,.1),transparent 65%);pointer-events:none;animation:float-orb 15s ease-in-out infinite alternate-reverse}
-@keyframes float-orb{from{translate:0 0}to{translate:30px 40px}}
-.auth-card{width:420px;max-width:92vw;background:rgba(255,255,255,.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,.6);border-radius:24px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;z-index:1;animation:auth-card-in .6s var(--spring-soft)}
-@keyframes auth-card-in{from{opacity:0;translate:0 30px;scale:.96}to{opacity:1;translate:0 0;scale:1}}
-.auth-head{text-align:center;padding:48px 28px 28px}
-.auth-head .mark{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#0071e3,#00a2ff);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;letter-spacing:-1px;box-shadow:0 8px 24px rgba(0,113,227,.35);animation:mark-float 4s ease-in-out infinite alternate}
-@keyframes mark-float{from{translate:0 0;box-shadow:0 8px 24px rgba(0,113,227,.35)}to{translate:0 -8px;box-shadow:0 16px 32px rgba(0,113,227,.45)}}
-.auth-head h1{font-size:24px;margin-bottom:6px;letter-spacing:-.03em;font-weight:700}
-.auth-head p{font-size:13.5px;color:var(--text-3)}
-.auth-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 28px}
-.auth-tab{flex:1;padding:14px;text-align:center;font-size:14px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:.18s var(--spring);background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;font-weight:500}
-.auth-tab:hover{color:var(--text-2)}
-.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.auth-body{padding:28px 32px 36px}
-.auth-body .field{animation:fade-in-up .4s var(--spring) both}
-.auth-body .field:nth-child(1){animation-delay:.05s}
-.auth-body .field:nth-child(2){animation-delay:.1s}
-.auth-body .field:nth-child(3){animation-delay:.15s}
-.auth-body .field:last-of-type{margin-bottom:18px}
+/* ===== 介绍主页 ===== */
+.landing{min-height:100vh;display:flex;flex-direction:column}
+.landing-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;max-width:1200px;margin:0 auto;width:100%}
+.landing-nav .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:18px;color:var(--ink);font-weight:400;letter-spacing:-.02em}
+.landing-nav .brand .mark{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--coral);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.landing-nav .links{display:flex;gap:8px;align-items:center}
+.landing-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;max-width:780px;margin:0 auto}
+.landing-hero .eyebrow{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--coral);margin-bottom:20px}
+.landing-hero h1{font-family:var(--serif);font-size:52px;font-weight:400;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-bottom:20px}
+.landing-hero h1 em{font-style:italic;color:var(--coral)}
+.landing-hero .lede{font-size:17px;color:var(--body);line-height:1.6;max-width:560px;margin-bottom:32px}
+.landing-hero .cta-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.landing-hero .cta-row .btn{padding:12px 28px;font-size:14.5px}
+.landing-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:1000px;margin:0 auto;padding:0 24px 60px;width:100%}
+.feature{background:var(--card);border:1px solid var(--hair);border-radius:var(--radius);padding:24px;transition:box-shadow .25s,translate .25s var(--spring)}
+.feature:hover{box-shadow:var(--shadow);translate:0 -3px}
+.feature .ico{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--coral-soft);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;color:var(--coral)}
+.feature h3{font-family:var(--serif);font-size:18px;font-weight:400;letter-spacing:-.02em;color:var(--ink);margin-bottom:8px}
+.feature p{font-size:13.5px;color:var(--muted);line-height:1.55}
+.landing-foot{background:var(--dark);color:var(--muted);text-align:center;padding:24px;font-size:12px}
+.landing-foot a{color:var(--coral)}
+
+/* ===== Auth 卡片（在 landing 内或独立显示） ===== */
+.auth-overlay{position:fixed;inset:0;background:rgba(20,20,19,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:90;display:none;align-items:center;justify-content:center;padding:20px}
+.auth-overlay.show{display:flex;animation:fadeIn .25s ease}
+.auth-card{width:400px;max-width:92vw;background:var(--canvas);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:var(--shadow-lg);overflow:hidden;animation:modalIn .35s var(--spring)}
+.auth-head{text-align:center;padding:36px 28px 20px}
+.auth-head .mark{width:52px;height:52px;border-radius:var(--radius);background:var(--coral);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;color:#fff}
+.auth-head h1{font-family:var(--serif);font-size:24px;font-weight:400;letter-spacing:-.02em;color:var(--ink);margin-bottom:5px}
+.auth-head p{font-size:13px;color:var(--muted)}
+.auth-tabs{display:flex;border-bottom:1px solid var(--hair);padding:0 28px}
+.auth-tab{flex:1;padding:13px;text-align:center;font-size:14px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--sans);font-weight:500}
+.auth-tab:hover{color:var(--body)}
+.auth-tab.active{color:var(--coral);border-bottom-color:var(--coral);font-weight:600}
+.auth-body{padding:24px 28px 32px}
 .auth-msg{color:var(--bad);font-size:12.5px;min-height:16px;margin-bottom:10px;font-weight:500}
 .turnstile-wrap{margin:4px 0 14px;min-height:65px}
-
-/* ===== View Transitions (页面切换动画) ===== */
-::view-transition-old(root){animation:vt-out .25s ease both}
-::view-transition-new(root){animation:vt-in .35s var(--spring) both}
-@keyframes vt-out{to{opacity:0;translate:0 -8px}}
-@keyframes vt-in{from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0}}
 
 /* ===== 响应式 ===== */
 @media(max-width:860px){
@@ -273,29 +233,53 @@ tr:hover .thumb{scale:1.1}
   .main{margin-left:0}
   .content{padding:24px 20px}
   .topbar{padding:0 20px}
-  .hero{padding:24px}
-  .hero .name{font-size:22px}
   .menu-toggle{display:block!important}
+  .landing-nav{padding:16px 20px}
+  .landing-hero h1{font-size:36px}
 }
-.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;margin-right:14px;padding:4px;border-radius:8px;transition:.15s}
-.menu-toggle:hover{background:rgba(0,0,0,.05)}
-.hidden{display:none!important}
+.menu-toggle{display:none;background:none;border:none;color:var(--ink);font-size:20px;cursor:pointer;margin-right:12px;padding:4px;border-radius:var(--radius-sm)}
+.menu-toggle:hover{background:var(--soft)}
 
-/* ===== 无障碍：减弱动效 ===== */
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 </style>
 </head>
 <body>
 
-<!-- ===== Auth 页 ===== -->
-<div class="auth-wrap" id="authView">
+<!-- ===== 介绍主页 ===== -->
+<div class="landing" id="landingView">
+  <div class="landing-nav">
+    <div class="brand"><div class="mark">饼</div>烧饼图床</div>
+    <div class="links">
+      <button class="btn btn-sm" id="navLogin">登录</button>
+      <button class="btn btn-sm btn-primary" id="navRegister">开始使用</button>
+    </div>
+  </div>
+  <div class="landing-hero">
+    <div class="eyebrow">自托管 · Cloudflare R2</div>
+    <h1>快速、私密的<em>图床</em>服务</h1>
+    <p class="lede">烧饼图床基于 Cloudflare R2 对象存储，SHA-256 内容去重，API Token 一键上传。完全自托管，数据你做主。</p>
+    <div class="cta-row">
+      <button class="btn btn-primary" id="heroCta">开始使用</button>
+      <button class="btn" id="heroLogin">已有账号 · 登录</button>
+    </div>
+  </div>
+  <div class="landing-features">
+    <div class="feature"><div class="ico">⚡</div><h3>极速上传</h3><p>API Token + 拖拽 / 粘贴 / ShareX，SHA-256 去重，秒传重复文件。支持 JPG / PNG / GIF / WebP / BMP。</p></div>
+    <div class="feature"><div class="ico">🔒</div><h3>自托管私有</h3><p>Cloudflare R2 存储，数据不经过第三方图床。账号体系 + 邮箱验证 + Turnstile 人机验证，安全可控。</p></div>
+    <div class="feature"><div class="ico">📁</div><h3>图库管理</h3><p>网格图库浏览全部图片，一键复制 URL / Markdown / HTML / BBCode。管理员事后审查，违规可禁用。</p></div>
+  </div>
+  <div class="landing-foot">sbimg · 自托管图床 · <a href="https://github.com/txcxgzs/sbimg" target="_blank">GitHub</a></div>
+</div>
+
+<!-- ===== Auth 弹窗 ===== -->
+<div class="auth-overlay" id="authView">
   <div class="auth-card">
     <div class="auth-head">
       <div class="mark">饼</div>
-      <h1>烧饼图床</h1>
-      <p>自托管 · Cloudflare R2</p>
+      <h1 id="authTitle">登录</h1>
+      <p id="authSub">欢迎回来</p>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin">登录</button>
@@ -306,7 +290,7 @@ tr:hover .thumb{scale:1.1}
         <div class="field"><label>用户名</label><input id="loginUser" type="text" autocomplete="username" /></div>
         <div class="field"><label>密码</label><input id="loginPass" type="password" autocomplete="current-password" /></div>
         <div class="auth-msg" id="loginMsg"></div>
-        <button class="btn btn-primary" id="btnLogin" style="width:100%;padding:12px;font-size:14px">登录</button>
+        <button class="btn btn-primary" id="btnLogin" style="width:100%;padding:11px;font-size:14px">登录</button>
       </div>
       <div id="registerBox" class="hidden">
         <div class="field"><label>用户名</label><input id="regUser" type="text" placeholder="3-32 位字母数字下划线" /></div>
@@ -314,8 +298,8 @@ tr:hover .thumb{scale:1.1}
         <div class="field"><label>密码</label><input id="regPass" type="password" placeholder="至少 8 位" /></div>
         <div class="turnstile-wrap" id="turnstileWrap"></div>
         <div class="auth-msg" id="regMsg"></div>
-        <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:12px;font-size:14px">注册</button>
-        <p style="font-size:11.5px;color:var(--text-3);margin-top:16px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
+        <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:11px;font-size:14px">注册</button>
+        <p style="font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
       </div>
     </div>
   </div>
@@ -364,6 +348,10 @@ let me = null, turnstileToken = null, tsWidgetId = null, turnstileEnabled = fals
 let page = 1, pageSize = 30, total = 0;
 let adminPage = 1, adminTotal = 0, adminFilter = 'all';
 let curView = 'dashboard';
+let storageInfo = null;
+
+/* ===== CSRF：从 cookie 读取 token ===== */
+function getCsrfToken(){ const m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/); return m ? m[1] : ''; }
 
 /* ===== 工具 ===== */
 function toast(msg, type){ const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (type?' '+type:''); void t.offsetWidth; t.className = 'toast show' + (type?' '+type:''); clearTimeout(t._timer); t._timer = setTimeout(()=>{ t.className = t.className.replace(' show',''); }, 2000); }
@@ -373,28 +361,22 @@ function fmtSize(n){ if(n<1024)return n+' B'; if(n<1048576)return (n/1024).toFix
 function fmtDate(d){ return new Date(d).toLocaleString('zh-CN',{hour12:false}); }
 function maskToken(t){ if(!t||t.length<16) return t||'-'; return t.slice(0,8)+'••••••••'+t.slice(-4); }
 function maskEmail(e){ if(!e) return '-'; const at=e.indexOf('@'); if(at<0) return e; const u=e.slice(0,at), d=e.slice(at); return (u.length>3?u.slice(0,3)+'•••':u)+d; }
-async function api(path, opts){ const r = await fetch(path, opts); const t = await r.text(); let j; try{j=JSON.parse(t)}catch{j={raw:t}} if(!r.ok) throw new Error(j.error||j.raw||'HTTP '+r.status); return j; }
 
-/* ===== 数字滚动动画 ===== */
-function countUp(el, target, duration){
-  duration = duration || 1200;
-  const start = performance.now();
-  el.classList.add('counting');
-  function frame(now){
-    const p = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.floor(target * eased).toLocaleString();
-    if(p < 1) requestAnimationFrame(frame);
-    else { el.textContent = target.toLocaleString(); setTimeout(()=>el.classList.remove('counting'), 800); }
+/* ===== API 封装（带 CSRF） ===== */
+async function api(path, opts){
+  opts = opts || {};
+  const method = (opts.method || 'GET').toUpperCase();
+  if(['POST','PUT','PATCH','DELETE'].includes(method)){
+    opts.headers = opts.headers || {};
+    const csrf = getCsrfToken();
+    if(csrf && !opts.headers['X-CSRF-Token']) opts.headers['X-CSRF-Token'] = csrf;
   }
-  requestAnimationFrame(frame);
-}
-/* 给容器内所有 .num[data-count] 做滚动动画 */
-function animateCounts(container){
-  container.querySelectorAll('.num[data-count]').forEach(el => {
-    const v = parseInt(el.dataset.count, 10);
-    if(!isNaN(v) && v > 0) countUp(el, v);
-  });
+  const r = await fetch(path, opts);
+  const t = await r.text();
+  let j;
+  try{ j = JSON.parse(t); } catch { j = { raw: t }; }
+  if(!r.ok) throw new Error(j.error || j.raw || 'HTTP ' + r.status);
+  return j;
 }
 
 /* ===== Modal ===== */
@@ -408,15 +390,27 @@ function closeModal(){ $('#modalOverlay').classList.remove('show'); }
 $('#modalClose').addEventListener('click', closeModal);
 $('#modalOverlay').addEventListener('click', e => { if(e.target===$('#modalOverlay')) closeModal(); });
 function confirmBox(title, msg, onOk, danger){
-  openModal(title, `<p style="font-size:13.5px;color:var(--text-2);line-height:1.6">${msg}</p>`,
+  openModal(title, `<p style="font-size:13.5px;color:var(--body);line-height:1.6">${msg}</p>`,
     `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn ${danger?'btn-danger':'btn-primary'}" data-act="ok">${danger?'确认删除':'确认'}</button>`);
   $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
   $('#modalFoot [data-act=ok]').addEventListener('click', () => { closeModal(); onOk(); });
 }
 
-/* ===== 鉴权 ===== */
+/* ===== Auth ===== */
 async function loadMe(){ try{ me = await api('/api/auth/me'); return true; }catch{ return false; } }
-async function logout(){ await api('/api/auth/logout',{method:'POST'}); me=null; $('#appView').classList.add('hidden'); $('#authView').classList.remove('hidden'); }
+async function logout(){ try{ await api('/api/auth/logout',{method:'POST'}); }catch{} me=null; $('#appView').classList.add('hidden'); $('#landingView').classList.remove('hidden'); }
+
+function showAuth(tab){
+  switchAuthTab(tab);
+  $('#authView').classList.add('show');
+}
+function hideAuth(){ $('#authView').classList.remove('show'); }
+$('#authView').addEventListener('click', e => { if(e.target===$('#authView')) hideAuth(); });
+
+$('#navLogin').addEventListener('click', () => showAuth('login'));
+$('#navRegister').addEventListener('click', () => showAuth('register'));
+$('#heroLogin').addEventListener('click', () => showAuth('login'));
+$('#heroCta').addEventListener('click', () => showAuth('register'));
 
 $('#tabLogin').addEventListener('click', () => switchAuthTab('login'));
 $('#tabRegister').addEventListener('click', () => switchAuthTab('register'));
@@ -425,18 +419,22 @@ function switchAuthTab(t){
   $('#tabRegister').classList.toggle('active', t==='register');
   $('#loginBox').classList.toggle('hidden', t!=='login');
   $('#registerBox').classList.toggle('hidden', t!=='register');
+  $('#authTitle').textContent = t==='login' ? '登录' : '注册';
+  $('#authSub').textContent = t==='login' ? '欢迎回来' : '创建你的账号';
   $('#loginMsg').textContent=''; $('#regMsg').textContent='';
   if(t==='register') setupTurnstile();
 }
 $('#btnLogin').addEventListener('click', async () => {
-  try{ me = await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})}); enterApp(); }
-  catch(e){ $('#loginMsg').textContent = e.message; }
+  try{
+    me = await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})});
+    hideAuth(); enterApp();
+  }catch(e){ $('#loginMsg').textContent = e.message; }
 });
 $('#btnRegister').addEventListener('click', async () => {
   try{
     me = await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#regUser').value.trim(),email:$('#regEmail').value.trim(),password:$('#regPass').value,turnstileToken})});
     if(me.verification_sent) toast('注册成功，请查收邮件激活','ok');
-    enterApp();
+    hideAuth(); enterApp();
   }catch(e){ $('#regMsg').textContent = e.message; if(tsWidgetId!==null && window.turnstile) window.turnstile.reset(tsWidgetId); }
 });
 
@@ -446,18 +444,19 @@ async function setupTurnstile(){
   try{
     const k = await api('/api/auth/turnstile-key');
     turnstileEnabled = k.enabled;
-    if(!k.enabled){ $('#turnstileWrap').innerHTML = '<span style="font-size:11px;color:var(--text-3)">人机验证未启用</span>'; return; }
+    if(!k.enabled){ $('#turnstileWrap').innerHTML = '<span style="font-size:11px;color:var(--muted)">人机验证未启用</span>'; return; }
     const s = document.createElement('script');
     s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTsLoad&render=explicit';
     s.async=true; s.defer=true;
     window.onTsLoad = () => { tsWidgetId = window.turnstile.render('#turnstileWrap',{sitekey:k.siteKey,callback:t=>{turnstileToken=t;}}); };
     document.body.appendChild(s);
-  }catch{ $('#turnstileWrap').innerHTML='<span style="font-size:11px;color:var(--text-3)">人机验证加载失败</span>'; }
+  }catch{ $('#turnstileWrap').innerHTML='<span style="font-size:11px;color:var(--muted)">人机验证加载失败</span>'; }
 }
 
 /* ===== 进入应用 ===== */
 function enterApp(){
-  $('#authView').classList.add('hidden');
+  $('#landingView').classList.add('hidden');
+  $('#authView').classList.remove('show');
   $('#appView').classList.remove('hidden');
   $('#chipName').textContent = me.username;
   $('#chipRole').textContent = me.role==='admin' ? '管理员' : '用户';
@@ -465,7 +464,7 @@ function enterApp(){
   navTo('dashboard');
 }
 
-/* ===== 导航（按角色动态生成） ===== */
+/* ===== 导航 ===== */
 function navItems(){
   const items = [
     {id:'dashboard',label:'仪表盘',ico:'⊞'},
@@ -488,20 +487,12 @@ function buildNav(){
   });
 }
 function navTo(view){
-  const doNav = () => {
-    curView = view;
-    buildNav();
-    $('#sidebar').classList.remove('open');
-    const labels = {dashboard:'仪表盘',upload:'上传图片',images:'我的图片',account:'账户',admin:'管理后台',settings:'系统设置'};
-    $('#crumb').textContent = labels[view] || '';
-    renderView(view);
-  };
-  // 支持且非同一页时用 View Transition 做页面切换动画
-  if(document.startViewTransition && view !== curView){
-    document.startViewTransition(doNav);
-  } else {
-    doNav();
-  }
+  curView = view;
+  buildNav();
+  $('#sidebar').classList.remove('open');
+  const labels = {dashboard:'仪表盘',upload:'上传图片',images:'我的图片',account:'账户',admin:'管理后台',settings:'系统设置'};
+  $('#crumb').textContent = labels[view] || '';
+  renderView(view);
 }
 $('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
 $('#userChip').addEventListener('click', () => navTo('account'));
@@ -521,45 +512,80 @@ function renderView(view){
 async function renderDashboard(c){
   const isAdmin = me.role==='admin';
   c.innerHTML = `
-    ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto;background:rgba(255,159,10,.15);color:var(--warn)">重发验证邮件</button></div>' : ''}
-    <div class="hero">
-      <div class="greet">${new Date().getHours()<12?'早上好':new Date().getHours()<18?'下午好':'晚上好'} 👋</div>
-      <div class="name">${escapeHtml(me.username)}<span>，欢迎回来</span></div>
-      <div class="desc">${isAdmin?'管理员视角 · 可查看全站数据':'上传你的图片，获取高速直链'}</div>
-    </div>
-    <div class="stats" id="statsBox"><div class="stat stat-skeleton"><div class="skeleton skeleton-line sk-label"></div><div class="skeleton skeleton-line sk-num"></div></div><div class="stat stat-skeleton"><div class="skeleton skeleton-line sk-label"></div><div class="skeleton skeleton-line sk-num"></div></div><div class="stat stat-skeleton"><div class="skeleton skeleton-line sk-label"></div><div class="skeleton skeleton-line sk-num"></div></div></div>
+    ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    <div class="stats" id="statsBox"><div class="stat"><div class="label">加载中…</div></div></div>
     <div class="card">
-      <div class="card-title">最近上传<span class="sub">最新 5 张</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>文件名</th><th>大小</th><th>时间</th></tr></thead><tbody id="recentBody"><tr><td colspan="4" class="empty">加载中…</td></tr></tbody></table></div>
+      <div class="card-title">最近上传<span class="sub">最新 8 张</span></div>
+      <div class="gallery" id="recentGallery"><div class="empty" style="grid-column:1/-1">加载中…</div></div>
     </div>`;
   if(!me.email_verified) $('#bResend').addEventListener('click', async () => { try{ await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发','ok'); }catch(e){ toast(e.message,'bad'); } });
   try{
-    const data = await api('/api/images?page=1&size=5');
+    const data = await api('/api/images?page=1&size=8');
     const recent = data.items;
     let myCount = data.total, allCount = data.total;
     if(isAdmin){ try{ const all = await api('/api/images?page=1&size=1&all=1'); allCount = all.total; }catch{} }
-    const dotImg = '#0071e3', dotAcc = '#34c759', dotRole = me.role==='admin'?'#af52de':'#8e8e93';
+
+    // 存储用量
+    let storageHtml = '';
+    try{
+      const s = await api('/api/account/storage');
+      storageInfo = s;
+      if(s.unlimited){
+        storageHtml = `<div class="stat"><div class="label"><span class="dot" style="background:var(--coral)"></span>存储用量</div><div class="num" style="font-size:20px;padding-top:4px">${s.used_mb} MB</div><div class="sub">无配额限制</div></div>`;
+      } else {
+        const pct = Math.min(100, (s.used_mb / s.quota_mb * 100)).toFixed(1);
+        storageHtml = `<div class="stat"><div class="label"><span class="dot" style="background:var(--coral)"></span>存储用量</div><div class="num" style="font-size:20px;padding-top:4px">${s.used_mb} / ${s.quota_mb} MB</div><div class="storage-bar"><div class="fill" style="width:${pct}%"></div></div><div class="sub">${pct}% 已用</div></div>`;
+      }
+    }catch{}
+
     $('#statsBox').innerHTML = `
-      <div class="stat"><div class="label"><span class="dot" style="background:${dotImg}"></span>${isAdmin?'全站图片':'我的图片'}</div><div class="num" data-count="${isAdmin?allCount:myCount}">0</div>${isAdmin?`<div class="sub">我的 ${myCount} 张</div>`:''}</div>
-      <div class="stat"><div class="label"><span class="dot" style="background:${dotAcc}"></span>账号状态</div><div class="num" style="font-size:16px;padding-top:8px">${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">待验证</span>'}</div></div>
-      <div class="stat"><div class="label"><span class="dot" style="background:${dotRole}"></span>角色</div><div class="num" style="font-size:16px;padding-top:8px">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</div></div>`;
-    animateCounts($('#statsBox'));
-    if(!recent.length){ $('#recentBody').innerHTML = '<tr><td colspan="4" class="empty"><span class="ico">🖼️</span>暂无图片，去上传一张吧</td></tr>'; }
-    else {
-      $('#recentBody').innerHTML = recent.map(it => `<tr>
-        <td><img class="thumb" src="${it.url}" loading="lazy"></td>
-        <td><span class="mono">${escapeHtml(it.original_name||it.key)}</span></td>
-        <td>${fmtSize(it.size)}</td>
-        <td class="muted">${fmtDate(it.created_at)}</td></tr>`).join('');
-    }
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--coral)"></span>${isAdmin?'全站图片':'我的图片'}</div><div class="num">${isAdmin?allCount:myCount}</div>${isAdmin?`<div class="sub">我的 ${myCount} 张</div>`:''}</div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--ok)"></span>账号状态</div><div class="num" style="font-size:15px;padding-top:8px">${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">待验证</span>'}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--ink)"></span>角色</div><div class="num" style="font-size:15px;padding-top:8px">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</div></div>
+      ${storageHtml}`;
+
+    const rg = $('#recentGallery');
+    if(!recent.length){ rg.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="ico">🖼️</span>暂无图片，去上传一张吧</div>'; }
+    else { rg.innerHTML = recent.map(it => galleryItemHtml(it, false)).join(''); bindGalleryActions(rg, () => navTo('images')); }
   }catch(e){ $('#statsBox').innerHTML = `<div class="stat"><div class="label">加载失败</div></div>`; }
+}
+
+/* ===== 图库组件（复用） ===== */
+function galleryItemHtml(it, showUser){
+  const dis = it.disabled ? ' disabled' : '';
+  const disBadge = it.disabled ? '<span class="badge badge-disabled gdisabled">已禁用</span>' : '';
+  const userTag = showUser && it.user_id!=null ? `#${it.user_id}` : (showUser ? '无主' : '');
+  return `<div class="gallery-item${dis}" data-id="${it.id}">
+    ${disBadge}
+    <img src="${it.url}" loading="lazy">
+    <div class="gmeta">${escapeHtml(it.original_name||it.key)} · ${fmtSize(it.size)}${userTag?' · '+userTag:''}</div>
+    <div class="overlay">
+      <div class="gname">${escapeHtml(it.original_name||it.key)}</div>
+      <div class="gacts">
+        <button class="btn btn-sm" data-act="copy" data-url="${escapeHtml(it.url)}">复制 URL</button>
+        <button class="btn btn-sm" data-act="copy" data-val="${escapeHtml(it.url)}" style="display:none">URL</button>
+        ${!it.disabled ? `<button class="btn btn-sm btn-danger" data-act="del" data-id="${it.id}">删除</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+function bindGalleryActions(container, onAfterDel){
+  container.querySelectorAll('[data-act=copy]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); copy(b.dataset.url); }));
+  container.querySelectorAll('[data-act=del]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.dataset.id;
+    confirmBox('删除图片','确认删除该图片？将同时删除 R2 中的对象，不可恢复。', async () => {
+      try{ await api(`/api/images/${id}`,{method:'DELETE'}); toast('已删除','ok'); if(onAfterDel) onAfterDel(); }catch(err){ toast(err.message,'bad'); }
+    }, true);
+  }));
 }
 
 /* ===== 上传 ===== */
 function renderUpload(c){
   const canUpload = me.email_verified;
   c.innerHTML = `
-    ${!canUpload ? '<div class="banner banner-warn">⚠️ 邮箱未验证，上传已禁用。<button class="btn btn-sm" id="upResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    ${!canUpload ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传已禁用。</span><button class="btn btn-sm" id="upResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    ${storageInfo && !storageInfo.unlimited ? `<div class="card"><div class="card-title">存储用量</div><div class="info-row"><div class="left"><span class="label">已用 / 配额</span><span class="value">${storageInfo.used_mb} / ${storageInfo.quota_mb} MB</span></div></div><div class="storage-bar"><div class="fill" style="width:${Math.min(100,storageInfo.used_mb/storageInfo.quota_mb*100).toFixed(1)}%"></div></div></div>` : ''}
     <div class="card">
       <div class="card-title">上传图片</div>
       <div class="drop ${canUpload?'':'disabled'}" id="drop">
@@ -584,23 +610,30 @@ function uploadFiles(files){ if(!me||!me.email_verified){ toast('请先验证邮
 function uploadOne(file){
   const fd = new FormData(); fd.append('file', file);
   const card = document.createElement('div'); card.className='upload-item';
-  card.innerHTML = `<img><div class="meta"><div class="name">上传中: ${escapeHtml(file.name)}</div><div class="links"><span class="chip">…</span></div></div>`;
+  card.innerHTML = `<img><div class="meta"><div class="name">上传中: ${escapeHtml(file.name)}</div><div class="url-box" style="display:none"><input type="text" readonly><button class="btn btn-sm">复制</button></div><div class="links"><span class="chip">…</span></div></div>`;
   $('#results').prepend(card);
   card.querySelector('img').src = URL.createObjectURL(file);
   fetch('/upload',{method:'POST',headers:{'Authorization':'Bearer '+me.api_token},body:fd})
     .then(async r => { const text = await r.text(); if(!r.ok) throw new Error(text); return text; })
-    .then(text => { let url, j; try{j=JSON.parse(text);url=j.url;}catch{url=text;j={url};}
+    .then(text => {
+      let url, j;
+      try{ j=JSON.parse(text); url=j.url; }catch{ url=text; j={url}; }
       card.querySelector('.name').innerHTML = escapeHtml(file.name) + (j.duplicated?'<span class="tag-dedup">去重</span>':'');
+      // URL 文本框
+      const ub = card.querySelector('.url-box'); ub.style.display='flex';
+      const inp = ub.querySelector('input'); inp.value = url;
+      ub.querySelector('button').addEventListener('click', () => copy(url));
+      // 格式 chips
       const box = card.querySelector('.links'); box.innerHTML='';
-      [['URL',j.url],['MD',j.markdown],['HTML',j.html],['BB',j.bbcode]].filter(([,v])=>v).forEach(([l,v])=>{ const c=document.createElement('span'); c.className='chip'+(l==='URL'?' chip-url':''); c.textContent=l; c.addEventListener('click',()=>copy(v)); box.appendChild(c); });
+      [['URL',j.url],['MD',j.markdown],['HTML',j.html],['BB',j.bbcode]].filter(([,v])=>v).forEach(([l,v])=>{ const ch=document.createElement('span'); ch.className='chip'+(l==='URL'?' chip-url':''); ch.textContent=l; ch.addEventListener('click',()=>copy(v)); box.appendChild(ch); });
     })
     .catch(err => { card.querySelector('.name').textContent = '失败: '+(err.message||'未知错误'); card.style.opacity=.5; });
 }
 
-/* ===== 我的图片 ===== */
+/* ===== 我的图片（图库） ===== */
 async function renderImages(c){
   c.innerHTML = `<div class="card"><div class="card-title">我的图片<span class="sub" id="imgCount"></span></div>
-    <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>文件名 / Key</th><th>大小</th><th>尺寸</th><th>时间</th><th>操作</th></tr></thead><tbody id="tbody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table></div>
+    <div class="gallery" id="gallery"><div class="empty" style="grid-column:1/-1">加载中…</div></div>
     <div class="pager" id="pager"></div></div>`;
   await loadImages();
 }
@@ -609,40 +642,42 @@ async function loadImages(){
     const data = await api(`/api/images?page=${page}&size=${pageSize}`);
     total = data.total;
     $('#imgCount').textContent = `共 ${total} 张`;
-    const tb = $('#tbody');
-    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty"><span class="ico">🖼️</span>暂无图片，去上传一张吧</td></tr>'; renderPager(); return; }
-    tb.innerHTML = data.items.map(it => `<tr>
-      <td><img class="thumb" src="${it.url}" loading="lazy"></td>
-      <td><span class="mono">${escapeHtml(it.original_name||it.key)}</span><br><span class="muted" style="font-size:11px">${escapeHtml(it.key)}</span></td>
-      <td>${fmtSize(it.size)}</td>
-      <td class="muted">${it.width&&it.height?it.width+'×'+it.height:'-'}</td>
-      <td class="muted">${fmtDate(it.created_at)}</td>
-      <td><button class="btn btn-sm btn-danger" data-del="${it.id}">删除</button></td></tr>`).join('');
-    tb.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
-      confirmBox('删除图片','确认删除该图片？将同时删除 R2 中的对象，不可恢复。', async () => {
-        try{ await api(`/api/images/${b.dataset.del}`,{method:'DELETE'}); toast('已删除','ok'); loadImages(); }catch(e){ toast(e.message,'bad'); }
-      }, true);
-    }));
+    const g = $('#gallery');
+    if(!data.items.length){ g.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="ico">🖼️</span>暂无图片，去上传一张吧</div>'; renderPager(); return; }
+    g.innerHTML = data.items.map(it => galleryItemHtml(it, false)).join('');
+    bindGalleryActions(g, () => loadImages());
     renderPager();
-  }catch(e){ $('#tbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+  }catch(e){ $('#gallery').innerHTML = `<div class="empty" style="grid-column:1/-1">${escapeHtml(e.message)}</div>`; }
 }
 function renderPager(){
   const pages = Math.max(1, Math.ceil(total/pageSize)); const box = $('#pager'); box.innerHTML='';
   if(pages<=1) return;
-  const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{page=p;loadImages();}); return b; };
+  const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn btn-sm'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{page=p;loadImages();}); return b; };
   box.appendChild(mk('‹',page-1,page<=1));
-  const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--text-2)'; sp.textContent=`${page} / ${pages}`; box.appendChild(sp);
+  const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--muted)'; sp.textContent=`${page} / ${pages}`; box.appendChild(sp);
   box.appendChild(mk('›',page+1,page>=pages));
 }
 
-/* ===== 账户（只读 + 模态框编辑） ===== */
-function renderAccount(c){
+/* ===== 账户 ===== */
+async function renderAccount(c){
+  // 刷新存储信息
+  try{ storageInfo = await api('/api/account/storage'); }catch{}
+  let storageRow = '';
+  if(storageInfo){
+    if(storageInfo.unlimited){
+      storageRow = `<div class="info-row"><div class="left"><span class="label">存储用量</span><span class="value">${storageInfo.used_mb} MB <span class="muted">（无配额限制）</span></span></div></div>`;
+    } else {
+      const pct = Math.min(100, (storageInfo.used_mb / storageInfo.quota_mb * 100)).toFixed(1);
+      storageRow = `<div class="info-row"><div class="left"><span class="label">存储用量</span><span class="value">${storageInfo.used_mb} / ${storageInfo.quota_mb} MB <span class="muted">(${pct}%)</span></span><div class="storage-bar" style="max-width:300px"><div class="fill" style="width:${pct}%"></div></div></div></div>`;
+    }
+  }
   c.innerHTML = `
     <div class="card">
       <div class="card-title">账户信息</div>
       <div class="info-row"><div class="left"><span class="label">用户名</span><span class="value">${escapeHtml(me.username)}</span></div></div>
       <div class="info-row"><div class="left"><span class="label">角色</span><span class="value">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</span></div></div>
       <div class="info-row"><div class="left"><span class="label">邮箱</span><span class="value">${me.email?escapeHtml(maskEmail(me.email)):'<span class="muted">未设置</span>'} ${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">未验证</span>'}</span></div><div class="right"><button class="btn btn-sm" id="btnEditEmail">修改邮箱</button>${!me.email_verified?'<button class="btn btn-sm" id="btnResend2">重发验证</button>':''}</div></div>
+      ${storageRow}
       <div class="info-row"><div class="left"><span class="label">API Token</span><span class="value mono" id="tokenVal">${maskToken(me.api_token)}</span></div><div class="right"><button class="btn btn-sm" id="btnShowToken">显示</button><button class="btn btn-sm" id="btnCopyToken">复制</button><button class="btn btn-sm btn-danger" id="btnResetToken">重置</button></div></div>
       <div class="info-row"><div class="left"><span class="label">密码</span><span class="value muted">••••••••</span></div><div class="right"><button class="btn btn-sm" id="btnEditPass">修改密码</button></div></div>
     </div>`;
@@ -656,7 +691,7 @@ function renderAccount(c){
 function modalEditEmail(){
   openModal('修改邮箱',
     `<div class="field"><label>新邮箱</label><input id="mEmail" type="email" value="${escapeHtml(me.email||'')}" /></div>
-     <div class="field"><p style="font-size:12px;color:var(--text-3);line-height:1.5;margin:0">修改后需重新验证，验证前旧邮箱仍可用。</p></div>`,
+     <div class="field"><p style="font-size:12px;color:var(--muted);line-height:1.5;margin:0">修改后需重新验证，验证前旧邮箱仍可用。</p></div>`,
     `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">发送验证邮件</button>`);
   $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
   $('#modalFoot [data-act=save]').addEventListener('click', async () => {
@@ -683,11 +718,14 @@ function renderAdmin(c){
     <div class="stats" id="adminStats"><div class="stat"><div class="label">加载中…</div></div></div>
     <div class="card">
       <div class="card-title">用户管理<span class="sub"><button class="btn btn-sm btn-primary" id="btnNewUser">+ 新建用户</button></span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>验证</th><th>图片</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="userTbody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody></table></div>
+      <div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">ID</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">用户名</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">邮箱</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">角色</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">验证</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">图片</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">状态</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--hair);text-transform:uppercase;letter-spacing:.5px">操作</th></tr></thead>
+        <tbody id="userTbody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+      </table></div>
     </div>
     <div class="card">
-      <div class="card-title">全部图片<span class="sub"><select id="adminFilter" class="filter-select"><option value="all">全部</option><option value="mine">仅自己</option><option value="unowned">无主</option></select> <button class="btn btn-sm" id="btnAdminRefresh">刷新</button></span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>Key</th><th>归属</th><th>大小</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminTbody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table></div>
+      <div class="card-title">全部图片<span class="sub"><select id="adminFilter" class="btn btn-sm" style="padding:5px 10px"><option value="all">全部</option><option value="mine">仅自己</option><option value="unowned">无主</option></select> <button class="btn btn-sm" id="btnAdminRefresh">刷新</button></span></div>
+      <div class="gallery" id="adminGallery"><div class="empty" style="grid-column:1/-1">加载中…</div></div>
       <div class="pager" id="adminPager"></div>
     </div>`;
   $('#btnNewUser').addEventListener('click', modalNewUser);
@@ -701,28 +739,29 @@ async function loadAdminStats(){
     let totalImgs = 0;
     try{ const a = await api('/api/images?page=1&size=1&all=1'); totalImgs = a.total; }catch{}
     $('#adminStats').innerHTML = `
-      <div class="stat"><div class="label"><span class="dot" style="background:#0071e3"></span>用户总数</div><div class="num" data-count="${users.items.length}">0</div></div>
-      <div class="stat"><div class="label"><span class="dot" style="background:#34c759"></span>全站图片</div><div class="num" data-count="${totalImgs}">0</div></div>
-      <div class="stat"><div class="label"><span class="dot" style="background:#ff9f0a"></span>待验证用户</div><div class="num" data-count="${users.items.filter(u=>!u.email_verified).length}">0</div></div>`;
-    animateCounts($('#adminStats'));
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--coral)"></span>用户总数</div><div class="num">${users.items.length}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--ok)"></span>全站图片</div><div class="num">${totalImgs}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--warn)"></span>待验证用户</div><div class="num">${users.items.filter(u=>!u.email_verified).length}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--bad)"></span>已禁用用户</div><div class="num">${users.items.filter(u=>u.disabled).length}</div></div>`;
   }catch{}
 }
 async function loadUsers(){
   try{
     const j = await api('/api/admin/users');
     const tb = $('#userTbody');
-    if(!j.items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty"><span class="ico">👤</span>暂无用户</td></tr>'; return; }
-    tb.innerHTML = j.items.map(u => `<tr>
-      <td class="muted">${u.id}</td>
-      <td style="font-weight:500">${escapeHtml(u.username)}${u.id===me.id?' <span class="muted">(你)</span>':''}</td>
-      <td>${u.email?escapeHtml(maskEmail(u.email)):'<span class="muted">-</span>'}</td>
-      <td>${u.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</td>
-      <td>${u.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">未验证</span>'}</td>
-      <td class="muted">${u.image_count}</td>
-      <td class="muted">${fmtDate(u.created_at)}</td>
-      <td>
+    if(!j.items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无用户</td></tr>'; return; }
+    tb.innerHTML = j.items.map(u => `<tr style="border-bottom:1px solid var(--hair);transition:background .12s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background=''">
+      <td style="padding:12px;color:var(--muted)">${u.id}</td>
+      <td style="padding:12px;font-weight:500;color:var(--ink)">${escapeHtml(u.username)}${u.id===me.id?' <span class="muted">(你)</span>':''}</td>
+      <td style="padding:12px">${u.email?escapeHtml(maskEmail(u.email)):'<span class="muted">-</span>'}</td>
+      <td style="padding:12px">${u.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</td>
+      <td style="padding:12px">${u.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">未验证</span>'}</td>
+      <td style="padding:12px;color:var(--muted)">${u.image_count}</td>
+      <td style="padding:12px">${u.disabled?'<span class="badge badge-disabled">已禁用</span>':'<span class="badge badge-ok">正常</span>'}</td>
+      <td style="padding:12px">
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           ${!u.email_verified?'<button class="btn btn-sm" data-act="verify" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">验证</button>':''}
+          ${u.disabled?'<button class="btn btn-sm" data-act="enable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">启用</button>':'<button class="btn btn-sm" data-act="disable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'"'+(u.role===\'admin\'?\' disabled\':\'\')+'>禁用</button>'}
           <button class="btn btn-sm" data-act="pwd" data-id="${u.id}" data-name="${escapeHtml(u.username)}">改密码</button>
           <button class="btn btn-sm" data-act="reset" data-id="${u.id}" data-name="${escapeHtml(u.username)}">重置Token</button>
           <button class="btn btn-sm btn-danger" data-act="del" data-id="${u.id}" data-name="${escapeHtml(u.username)}"${u.id===me.id?' disabled':''}>删除</button>
@@ -735,6 +774,8 @@ function userAction(act, id, name){
   if(act==='del'){ confirmBox('删除用户',`删除用户 <b>${escapeHtml(name)}</b>？其图片将转为无主，不连带删除。`, async () => { try{ await api(`/api/admin/users/${id}`,{method:'DELETE'}); toast('已删除','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }, true); }
   else if(act==='reset'){ confirmBox('重置 Token',`重置用户 <b>${escapeHtml(name)}</b> 的 API Token？旧 Token 立即失效。`, async () => { try{ await api(`/api/admin/users/${id}/reset-token`,{method:'POST'}); toast('已重置','ok'); }catch(e){ toast(e.message,'bad'); } }); }
   else if(act==='verify'){ confirmBox('手动验证',`手动标记 <b>${escapeHtml(name)}</b> 的邮箱为已验证？`, async () => { try{ await api(`/api/admin/users/${id}/verify`,{method:'POST'}); toast('已验证','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }); }
+  else if(act==='disable'){ confirmBox('禁用用户',`禁用用户 <b>${escapeHtml(name)}</b>？其名下所有图片将禁止公开访问（数据保留，可恢复）。`, async () => { try{ await api(`/api/admin/users/${id}/disable`,{method:'POST'}); toast('已禁用','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }); }
+  else if(act==='enable'){ confirmBox('启用用户',`启用用户 <b>${escapeHtml(name)}</b>？其名下图片将恢复公开访问。`, async () => { try{ await api(`/api/admin/users/${id}/enable`,{method:'POST'}); toast('已启用','ok'); loadUsers(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }); }
   else if(act==='pwd'){ modalAdminPass(id, name); }
 }
 function modalAdminPass(id, name){
@@ -766,30 +807,23 @@ async function loadAdminImages(){
   try{
     const data = await api(`/api/images?${q}`);
     adminTotal = data.total;
-    const tb = $('#adminTbody');
-    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty"><span class="ico">🖼️</span>暂无图片</td></tr>'; }
+    const g = $('#adminGallery');
+    if(!data.items.length){ g.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="ico">🖼️</span>暂无图片</div>'; }
     else{
-      tb.innerHTML = data.items.map(it => `<tr>
-        <td><img class="thumb" src="${it.url}" loading="lazy"></td>
-        <td><span class="mono">${escapeHtml(it.key)}</span></td>
-        <td class="muted">${it.user_id==null?'无主':'#'+it.user_id}</td>
-        <td>${fmtSize(it.size)}</td>
-        <td class="muted">${fmtDate(it.created_at)}</td>
-        <td><button class="btn btn-sm btn-danger" data-del="${it.id}">删除</button></td></tr>`).join('');
-      tb.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => confirmBox('删除图片','确认删除该图片？将同时删除 R2 中的对象。', async () => { try{ await api(`/api/images/${b.dataset.del}`,{method:'DELETE'}); toast('已删除','ok'); loadAdminImages(); loadAdminStats(); }catch(e){ toast(e.message,'bad'); } }, true)));
+      g.innerHTML = data.items.map(it => galleryItemHtml(it, true)).join('');
+      bindGalleryActions(g, () => { loadAdminImages(); loadAdminStats(); });
     }
     const pages = Math.max(1, Math.ceil(adminTotal/30)); const box = $('#adminPager'); box.innerHTML='';
     if(pages<=1) return;
-    const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{adminPage=p;loadAdminImages();}); return b; };
+    const mk=(l,p,d)=>{ const b=document.createElement('button'); b.className='btn btn-sm'; b.textContent=l; b.disabled=!!d; b.addEventListener('click',()=>{adminPage=p;loadAdminImages();}); return b; };
     box.appendChild(mk('‹',adminPage-1,adminPage<=1));
-    const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--text-2)'; sp.textContent=`${adminPage} / ${pages}`; box.appendChild(sp);
+    const sp=document.createElement('span'); sp.style.cssText='font-size:13px;color:var(--muted)'; sp.textContent=`${adminPage} / ${pages}`; box.appendChild(sp);
     box.appendChild(mk('›',adminPage+1,adminPage>=pages));
-  }catch(e){ $('#adminTbody').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(e.message)}</td></tr>`; }
+  }catch(e){ $('#adminGallery').innerHTML = `<div class="empty" style="grid-column:1/-1">${escapeHtml(e.message)}</div>`; }
 }
 
 /* ===== 系统设置 ===== */
 let settingsData = {};
-function maskSecret(s){ if(!s) return '••••••••'; return maskToken(s); }
 function badgeConfigured(ok){ return ok?'<span class="badge badge-ok">已配置</span>':'<span class="badge badge-bad">未配置</span>'; }
 function boolBadge(v){ return v==='true'?'<span class="badge badge-ok">启用</span>':'<span class="badge badge-warn">禁用</span>'; }
 function valOrDash(v){ return v?escapeHtml(v):'<span class="muted">-</span>'; }
@@ -801,7 +835,7 @@ async function renderSettings(c){
       <div class="card-title">Cloudflare R2<span class="sub"><button class="btn btn-sm" id="btnEditR2">编辑</button></span></div>
       <div class="info-row"><div class="left"><span class="label">Account ID</span><span class="value mono" id="sR2AccountId">-</span></div></div>
       <div class="info-row"><div class="left"><span class="label">Access Key ID</span><span class="value mono" id="sR2AccessKey">-</span></div></div>
-      <div class="info-row"><div class="left"><span class="label">Secret Access Key</span><span class="value mono" id="sR2Secret">••••••••</span></div><div class="right" id="sR2SecretBadge"></div></div>
+      <div class="info-row"><div class="left"><span class="label">Secret Access Key</span><span class="value mono">••••••••</span></div><div class="right" id="sR2SecretBadge"></div></div>
       <div class="info-row"><div class="left"><span class="label">Bucket</span><span class="value mono" id="sR2Bucket">-</span></div></div>
     </div>
     <div class="card">
@@ -822,8 +856,9 @@ async function renderSettings(c){
     <div class="card">
       <div class="card-title">站点与注册<span class="sub"><button class="btn btn-sm" id="btnEditSite">编辑</button></span></div>
       <div class="info-row"><div class="left"><span class="label">对外域名 (Base URL)</span><span class="value mono" id="sBaseUrl">-</span></div></div>
-      <div class="info-row"><div class="left"><span class="label">站点 URL (App URL)</span><span class="value mono" id="sAppUrl">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">站点 URL (App URL)</span><span class="value mono" id="sAppUrl">-</span></div><div class="right"><span class="badge badge-warn">必须填实际域名！</span></div></div>
       <div class="info-row"><div class="left"><span class="label">开放注册</span><span class="value" id="sAllowRegister">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">用户存储配额 (MB)</span><span class="value" id="sQuota">-</span></div></div>
       <div class="info-row"><div class="left"><span class="label">注册限频 (每10分钟)</span><span class="value" id="sRegisterLimit">-</span></div></div>
       <div class="info-row"><div class="left"><span class="label">上传大小上限 (MB)</span><span class="value" id="sMaxSize">-</span></div></div>
     </div>
@@ -848,29 +883,26 @@ async function loadSettingsData(){
   try{
     const j = await api('/api/admin/settings');
     settingsData = j.settings;
-    // R2
     $('#sR2AccountId').innerHTML = valOrDash(settingsData.r2_account_id?.value);
     $('#sR2AccessKey').innerHTML = valOrDash(settingsData.r2_access_key_id?.value);
     $('#sR2SecretBadge').innerHTML = badgeConfigured(settingsData.r2_secret_access_key?.has_value);
     $('#sR2Bucket').innerHTML = valOrDash(settingsData.r2_bucket?.value);
-    // 邮件
     $('#sMailEnabled').innerHTML = boolBadge(settingsData.mail_enabled?.value);
     $('#sSmtpHost').innerHTML = valOrDash(settingsData.smtp_host?.value);
     $('#sSmtpPort').textContent = settingsData.smtp_port?.value || '-';
     $('#sSmtpUser').innerHTML = valOrDash(settingsData.smtp_user?.value);
     $('#sSmtpPassBadge').innerHTML = badgeConfigured(settingsData.smtp_pass?.has_value);
     $('#sSmtpFrom').innerHTML = valOrDash(settingsData.smtp_from?.value);
-    // Turnstile
     $('#sTurnstileEnabled').innerHTML = boolBadge(settingsData.turnstile_enabled?.value);
     $('#sTurnstileSiteKey').innerHTML = valOrDash(settingsData.turnstile_site_key?.value);
     $('#sTurnstileSecretBadge').innerHTML = badgeConfigured(settingsData.turnstile_secret_key?.has_value);
-    // 站点与注册
     $('#sBaseUrl').innerHTML = valOrDash(settingsData.base_url?.value);
     $('#sAppUrl').innerHTML = valOrDash(settingsData.app_url?.value);
     $('#sAllowRegister').innerHTML = boolBadge(settingsData.allow_register?.value);
+    const quota = settingsData.user_storage_quota_mb?.value || '0';
+    $('#sQuota').textContent = quota === '0' ? '不限制' : quota + ' MB';
     $('#sRegisterLimit').textContent = settingsData.register_limit_per_10min?.value || '-';
     $('#sMaxSize').textContent = settingsData.max_size_mb?.value ? settingsData.max_size_mb.value + ' MB' : '-';
-    // 限流
     $('#sGlobalLimit').textContent = settingsData.global_limit_per_min?.value || '-';
     $('#sUploadLimit').textContent = settingsData.upload_limit_per_min?.value || '-';
     $('#sUploadUserLimit').textContent = settingsData.upload_limit_per_user_per_min?.value || '-';
@@ -878,14 +910,13 @@ async function loadSettingsData(){
     $('#sLoginFailThreshold').textContent = settingsData.login_fail_threshold?.value || '-';
     $('#sLoginBanMinutes').textContent = settingsData.login_ban_minutes?.value || '-';
     $('#sUploadConcurrency').textContent = settingsData.upload_concurrency?.value || '-';
-    // stats
     const r2ok = settingsData.r2_account_id?.value && settingsData.r2_access_key_id?.value && settingsData.r2_secret_access_key?.has_value;
     const mailok = settingsData.mail_enabled?.value === 'true' && settingsData.smtp_host?.value && settingsData.smtp_pass?.has_value;
     const tsok = settingsData.turnstile_enabled?.value === 'true' && settingsData.turnstile_site_key?.value;
     $('#settingsStats').innerHTML = `
-      <div class="stat"><div class="label"><span class="dot" style="background:#0071e3"></span>R2 存储</div><div class="num" style="font-size:16px;padding-top:8px">${badgeConfigured(r2ok)}</div></div>
-      <div class="stat"><div class="label"><span class="dot" style="background:#34c759"></span>邮件</div><div class="num" style="font-size:16px;padding-top:8px">${mailok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>
-      <div class="stat"><div class="label"><span class="dot" style="background:#af52de"></span>Turnstile</div><div class="num" style="font-size:16px;padding-top:8px">${tsok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>`;
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--coral)"></span>R2 存储</div><div class="num" style="font-size:15px;padding-top:8px">${badgeConfigured(r2ok)}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--ok)"></span>邮件</div><div class="num" style="font-size:15px;padding-top:8px">${mailok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:var(--ink)"></span>Turnstile</div><div class="num" style="font-size:15px;padding-top:8px">${tsok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>`;
   }catch(e){ toast(e.message,'bad'); }
 }
 function boolSelect(id, val){ return `<select id="${id}"><option value="true" ${val==='true'?'selected':''}>启用</option><option value="false" ${val!=='true'?'selected':''}>禁用</option></select>`; }
@@ -958,8 +989,9 @@ function modalEditSite(){
   const d = settingsData;
   openModal('编辑站点与注册',
     `<div class="field"><label>对外域名 (Base URL)</label><input id="mBaseUrl" value="${escapeHtml(d.base_url?.value||'')}" placeholder="https://img.example.com" /><div class="hint">用于生成图片访问链接</div></div>
-     <div class="field"><label>站点 URL (App URL)</label><input id="mAppUrl" value="${escapeHtml(d.app_url?.value||'')}" placeholder="https://img.example.com" /><div class="hint">用于生成邮箱验证链接，一般与 Base URL 相同</div></div>
+     <div class="field"><label>站点 URL (App URL)</label><input id="mAppUrl" value="${escapeHtml(d.app_url?.value||'')}" placeholder="https://img.example.com" /><div class="hint">用于生成邮箱验证链接，必须填实际域名！否则邮件链接指向 localhost，用户点击会 404</div></div>
      <div class="field"><label>开放注册</label>${boolSelect('mAllowRegister', d.allow_register?.value||'false')}</div>
+     <div class="field"><label>用户存储配额 (MB)</label><input id="mQuota" type="number" value="${d.user_storage_quota_mb?.value||'0'}" /><div class="hint">0 = 不限制。设置后用户上传时检查总用量是否超额</div></div>
      <div class="field"><label>注册限频 (每10分钟/IP)</label><input id="mRegisterLimit" type="number" value="${d.register_limit_per_10min?.value||'3'}" /></div>
      <div class="field"><label>上传大小上限 (MB)</label><input id="mMaxSize" type="number" value="${d.max_size_mb?.value||'20'}" /></div>`,
     `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
@@ -969,6 +1001,7 @@ function modalEditSite(){
       base_url: $('#mBaseUrl').value.trim(),
       app_url: $('#mAppUrl').value.trim(),
       allow_register: $('#mAllowRegister').value,
+      user_storage_quota_mb: $('#mQuota').value,
       register_limit_per_10min: $('#mRegisterLimit').value,
       max_size_mb: $('#mMaxSize').value,
     }); closeModal(); toast('已保存','ok'); loadSettingsData(); }
@@ -1001,28 +1034,10 @@ function modalEditLimits(){
   });
 }
 
-/* ===== 磁吸按钮 — 鼠标靠近时按钮轻微跟随 ===== */
-function initMagneticButtons(){
-  document.addEventListener('mousemove', e => {
-    document.querySelectorAll('.btn-primary:not(:disabled)').forEach(btn => {
-      const r = btn.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      if(dist < 80){
-        const x = (e.clientX - cx) * 0.12;
-        const y = (e.clientY - cy) * 0.12;
-        btn.style.translate = `${x}px ${y}px`;
-      } else {
-        btn.style.translate = '';
-      }
-    });
-  });
-}
-
 /* ===== 启动 ===== */
 (async () => {
-  if(await loadMe()) enterApp(); else { $('#authView').classList.remove('hidden'); $('#appView').classList.add('hidden'); }
-  initMagneticButtons();
+  if(await loadMe()) enterApp();
+  else { $('#landingView').classList.remove('hidden'); }
 })();
 </script>
 </body>

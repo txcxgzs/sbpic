@@ -91,11 +91,20 @@ export async function migrate(): Promise<void> {
     if (!(await indexExists('images', 'idx_user'))) {
       await conn.query('ALTER TABLE `images` ADD INDEX `idx_user` (`user_id`)');
     }
+    if (!(await columnExists('images', 'disabled'))) {
+      await conn.query('ALTER TABLE `images` ADD COLUMN `disabled` TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    if (!(await indexExists('images', 'idx_disabled'))) {
+      await conn.query('ALTER TABLE `images` ADD INDEX `idx_disabled` (`disabled`)');
+    }
     if (!(await columnExists('users', 'email'))) {
       await conn.query('ALTER TABLE `users` ADD COLUMN `email` VARCHAR(255) NULL');
     }
     if (!(await columnExists('users', 'email_verified'))) {
       await conn.query('ALTER TABLE `users` ADD COLUMN `email_verified` TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    if (!(await columnExists('users', 'disabled'))) {
+      await conn.query('ALTER TABLE `users` ADD COLUMN `disabled` TINYINT(1) NOT NULL DEFAULT 0');
     }
 
     // 初始化 settings 默认值（仅对尚不存在的 key 插入）

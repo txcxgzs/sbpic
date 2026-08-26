@@ -47,6 +47,11 @@ function req(method, urlPath, { body, headers, cookie } = {}){
     const h = { ...(headers||{}) };
     if (data) { h['Content-Type'] = h['Content-Type'] || 'application/json'; h['Content-Length'] = data.length; }
     if (cookie) h['Cookie'] = cookie;
+    // CSRF：状态变更请求自动从 cookie 提取 csrf_token 放入 header
+    if (cookie && ['POST','PUT','PATCH','DELETE'].includes(method.toUpperCase())) {
+      const m = cookie.match(/csrf_token=([^;]+)/);
+      if (m && !h['X-CSRF-Token']) h['X-CSRF-Token'] = m[1];
+    }
     const r = http.request({ host:'127.0.0.1', port:'3125', method, path:urlPath, headers:h }, res => {
       const setCookie = res.headers['set-cookie'];
       let chunks = []; res.on('data', c => chunks.push(c)); res.on('end', () => {
@@ -96,6 +101,7 @@ const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
       global_limit_per_min: '1000', upload_limit_per_min: '1000',
       upload_limit_per_user_per_min: '1000', view_limit_per_min: '1000',
       upload_concurrency: '1000',
+      user_storage_quota_mb: '0',
       r2_account_id: 'test', r2_access_key_id: 'test', r2_secret_access_key: 'test', r2_bucket: 'sbimg',
     });
     await pool.query('DELETE FROM images');
@@ -239,6 +245,61 @@ const FAKE_PNG = Buffer.from('this-is-plain-text-not-an-image');
       lastStatus = r.status;
     }
     assert(lastStatus === 429, '连续失败后应 429 封禁, got '+lastStatus);
+
+    console.log('--- 20. 禁用用户后图片不可访问 ---');
+    // admin 登录拿新 cookie（前面的可能因封禁影响）
+    r = await req('POST', '/api/auth/login', { body: { username:'admin', password:'adminpass123' } });
+    assert(r.status === 200, 'admin 重新登录应成功');
+    cookieA = cookieFrom(r.setCookie);
+    const usersList3 = (await req('GET','/api/admin/users',{cookie:cookieA})).json.items;
+    const uidA2 = usersList3.find(u => u.username === 'usera').id;
+    // userA 有图片（之前上传过），先获取一张的 key
+    const userImages = (await req('GET','/api/images?all=1&user_id='+uidA2,{cookie:cookieA})).json;
+    assert(userImages.items.length > 0, 'userA 应有图片');
+    const testImg = userImages.items[0];
+    // 禁用前图片可访问
+    r = await req('GET', '/i/'+testImg.key, {});
+    assert(r.status === 200, '禁用前图片应可访问, got '+r.status);
+    // 禁用用户
+    r = await req('POST', '/api/admin/users/'+uidA2+'/disable', { cookie: cookieA });
+    assert(r.status === 200, '禁用用户应成功, got '+r.status+' '+r.text);
+    // 禁用后图片不可访问（403）
+    r = await req('GET', '/i/'+testImg.key, {});
+    assert(r.status === 403, '禁用后图片应 403, got '+r.status);
+    // 禁用用户的 API token 上传应被拒（403）
+    r = await req('POST', '/upload', { body: mp.body, headers: { 'Authorization':'Bearer '+tokenB, 'Content-Type':mp.contentType } });
+    assert(r.status === 403, '禁用用户 API token 上传应 403, got '+r.status+' '+r.text);
+
+    console.log('--- 21. 启用用户后图片恢复访问 ---');
+    r = await req('POST', '/api/admin/users/'+uidA2+'/enable', { cookie: cookieA });
+    assert(r.status === 200, '启用用户应成功, got '+r.status+' '+r.text);
+    // 启用后图片可访问
+    r = await req('GET', '/i/'+testImg.key, {});
+    assert(r.status === 200, '启用后图片应可访问, got '+r.status);
+
+    console.log('--- 22. 存储配额查询 ---');
+    // 设置配额为 1MB
+    await saveSettings({ user_storage_quota_mb: '1' });
+    // admin 查存储用量
+    r = await req('GET', '/api/account/storage', { cookie: cookieA });
+    assert(r.status === 200, '存储查询应 200');
+    assert(r.json.quota_mb === 1, '配额应为 1MB, got '+r.json.quota_mb);
+    assert(r.json.unlimited === false, '配额 1MB 时 unlimited 应为 false');
+    // 设置为 0（不限制）
+    await saveSettings({ user_storage_quota_mb: '0' });
+    r = await req('GET', '/api/account/storage', { cookie: cookieA });
+    assert(r.status === 200, '存储查询应 200');
+    assert(r.json.unlimited === true, '配额 0 时 unlimited 应为 true');
+
+    console.log('--- 23. CSRF 防护：错误 token 的 POST 应被拒 ---');
+    // 登录获取 csrf token cookie
+    r = await req('POST', '/api/auth/login', { body: { username:'admin', password:'adminpass123' } });
+    const fullCookie = cookieFrom(r.setCookie);
+    const csrfMatch = fullCookie.match(/csrf_token=([^;]+)/);
+    assert(csrfMatch, '登录应返回 csrf_token cookie');
+    // 发 POST 带 csrf cookie 但故意发错误的 X-CSRF-Token
+    r = await req('POST', '/api/account/password', { cookie: fullCookie, headers: { 'X-CSRF-Token': 'wrong-token' }, body: { oldPassword:'adminpass123', newPassword:'newadmin123' } });
+    assert(r.status === 403, '错误 CSRF token 应 403, got '+r.status+' '+r.text);
 
     console.log('\n=== 全部测试通过 ===');
   } catch (e) {

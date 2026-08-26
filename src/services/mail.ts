@@ -62,12 +62,19 @@ export async function sendMail(
 }
 
 export async function sendVerificationEmail(to: string, link: string): Promise<boolean> {
+  const safeLink = escapeHtml(link);
   const html = `<div style="font-family:-apple-system,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#222;">
   <h2 style="margin:0 0 12px;">烧饼图床 · 邮箱验证</h2>
   <p>请点击下方按钮激活你的邮箱（链接 24 小时内有效）：</p>
-  <p><a href="${link}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;">激活邮箱</a></p>
-  <p style="font-size:12px;color:#888;margin-top:16px;">如果按钮无法点击，请复制此链接到浏览器：<br>${link}</p>
+  <p><a href="${safeLink}" style="display:inline-block;padding:10px 20px;background:#cc785c;color:#fff;border-radius:8px;text-decoration:none;">激活邮箱</a></p>
+  <p style="font-size:12px;color:#888;margin-top:16px;">如果按钮无法点击，请复制此链接到浏览器：<br>${safeLink}</p>
   <p style="font-size:12px;color:#888;">若非本人操作请忽略此邮件。</p>
 </div>`;
   return sendMail(to, '【烧饼图床】邮箱验证', html, `请访问以下链接激活邮箱（24小时内有效）：\n${link}`);
+}
+
+function escapeHtml(s: string): string {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string),
+  );
 }

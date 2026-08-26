@@ -1,5 +1,6 @@
 import express from 'express';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import MySQLStore from 'express-mysql-session';
 import { config } from './config';
 import { pool } from './db/pool';
@@ -7,7 +8,7 @@ import { migrate } from './db/migrate';
 import { ensureInitialAdmin } from './services/auth';
 import { loadSettings } from './services/settings';
 import { notFound, errorHandler } from './middleware/errorHandler';
-import { attachSessionUser } from './middleware/auth';
+import { attachSessionUser, csrfCheck } from './middleware/auth';
 import { globalLimiter } from './middleware/rateLimit';
 import { securityHeaders, noStoreOnError } from './middleware/securityHeaders';
 import pageRouter from './routes/page';
@@ -37,6 +38,7 @@ async function main(): Promise<void> {
   app.use(noStoreOnError);
 
   app.use(express.json());
+  app.use(cookieParser());
 
   // session 存 MySQL
   const MySQLStoreFactory = MySQLStore(session);
@@ -70,6 +72,8 @@ async function main(): Promise<void> {
 
   // 每个请求尝试用 session 填充 req.user
   app.use(attachSessionUser);
+  // CSRF 校验（状态变更请求需 X-CSRF-Token 与 cookie 一致）
+  app.use(csrfCheck);
 
   // 路由
   app.use(pageRouter);       // / 和 /health

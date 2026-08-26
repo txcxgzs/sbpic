@@ -9,7 +9,8 @@ import {
   isEmailTakenByVerified,
   AuthError,
 } from '../services/auth';
-import { getSettingBool } from '../services/settings';
+import { getSettingBool, getSettingNum } from '../services/settings';
+import { getUserStorage } from '../services/images';
 
 const router = Router();
 
@@ -62,6 +63,18 @@ router.post('/api/account/email', requireLogin, async (req: Request, res: Respon
   await resetEmailVerification(user.id, newEmail);
   await createAndSendVerification(user.id, newEmail);
   res.json({ success: true, message: '验证邮件已发送到新邮箱' });
+});
+
+// 存储用量
+router.get('/api/account/storage', requireLogin, async (req: Request, res: Response) => {
+  const used = await getUserStorage(req.user!.id);
+  const quotaMb = getSettingNum('user_storage_quota_mb', 0);
+  res.json({
+    used_bytes: used,
+    used_mb: +(used / 1024 / 1024).toFixed(2),
+    quota_mb: quotaMb,
+    unlimited: quotaMb === 0,
+  });
 });
 
 export default router;

@@ -16,6 +16,7 @@ export interface ListResult {
 export interface ListScope {
   userId: number | null; // null = 全部（管理员）
   targetUserId?: number | null; // 管理员查指定用户
+  includeDisabled?: boolean; // 管理员可看禁用图片
 }
 
 export async function listImages(
@@ -39,6 +40,10 @@ export async function listImages(
     where.push('`user_id` = ?');
     params.push(scope.userId);
   }
+  // 非管理员默认排除禁用图片
+  if (!scope.includeDisabled) {
+    where.push('`disabled` = 0');
+  }
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
   const [countRows] = await pool.query<RowDataPacket[]>(
@@ -61,6 +66,23 @@ export async function getImageById(id: number): Promise<ImageRow | null> {
     [id],
   );
   return rows.length > 0 ? toRow(rows[0]) : null;
+}
+
+export async function getImageByKey(key: string): Promise<ImageRow | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM `images` WHERE `key` = ? LIMIT 1',
+    [key],
+  );
+  return rows.length > 0 ? toRow(rows[0]) : null;
+}
+
+/** 查询用户已用存储（字节），排除禁用图片 */
+export async function getUserStorage(userId: number): Promise<number> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT COALESCE(SUM(`size`), 0) AS total FROM `images` WHERE `user_id` = ? AND `disabled` = 0',
+    [userId],
+  );
+  return rows[0].total as number;
 }
 
 /** 删除鉴权：本人删自己的，管理员删任意 */

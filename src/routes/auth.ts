@@ -13,6 +13,7 @@ import {
 } from '../services/auth';
 import { verifyTurnstileToken, turnstileSiteKey, turnstileEnabled } from '../services/turnstile';
 import { getSetting, getSettingBool } from '../services/settings';
+import { issueCsrfToken } from '../middleware/auth';
 import {
   registerLimiter,
   loginLimiter,
@@ -68,8 +69,14 @@ router.post('/api/auth/login', loginLimiter, async (req: Request, res: Response)
     });
     return;
   }
+  // 禁用检查
+  if (user.disabled) {
+    res.status(403).json({ error: '账号已被禁用' });
+    return;
+  }
   clearLoginFailure(ip, username);
   req.session.userId = user.id;
+  issueCsrfToken(res);
   res.json(publicUser(user));
 });
 
@@ -115,6 +122,7 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
       const user = await createUser({ username, password, role: 'user', email, emailVerified: 0 });
       await createAndSendVerification(user.id, email);
       req.session.userId = user.id;
+      issueCsrfToken(res);
       res.json({
         ...publicUser(user),
         verification_sent: true,
@@ -131,6 +139,7 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
       emailVerified: 1,
     });
     req.session.userId = user.id;
+    issueCsrfToken(res);
     res.json(publicUser(user));
   } catch (err) {
     if (err instanceof AuthError) {
@@ -141,26 +150,55 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
   }
 });
 
+// ── Claude 风格内联 HTML 页面 ──
+function safeUrl(raw: string): string {
+  // 允许 http/https 开头的 URL；阻断 javascript: 等危险 scheme
+  const u = String(raw).trim();
+  if (/^https?:\/\//i.test(u)) return escapeHtml(u);
+  return '/';
+}
+
+function claudePage(title: string, bodyHtml: string): string {
+  const appUrl = getSetting('app_url');
+  const homeHref = safeUrl(appUrl);
+  return `<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(title)} · 烧饼图床</title>
+<style>
+  :root{--canvas:#faf9f5;--ink:#141413;--body:#3d3d3a;--muted:#6c6a64;--coral:#cc785c;--coral-d:#a9583e;--card:#efe9de;--soft:#f5f0e8;--dark:#181715;--hair:#e6dfd8;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,-apple-system,'Segoe UI',sans-serif;background:var(--canvas);color:var(--body);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .wrap{max-width:480px;width:100%;text-align:center}
+  .badge{display:inline-block;font-family:Georgia,'Cormorant Garamond',serif;font-weight:400;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);margin-bottom:24px}
+  h1{font-family:Georgia,'Cormorant Garamond',serif;font-weight:400;letter-spacing:-.02em;color:var(--ink);font-size:36px;line-height:1.15;margin-bottom:16px}
+  p{font-size:16px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+  a.cta{display:inline-block;margin-top:20px;padding:11px 28px;background:var(--coral);color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:500;transition:background .15s}
+  a.cta:hover{background:var(--coral-d)}
+  .footer{margin-top:40px;font-size:12px;color:var(--muted)}
+</style></head><body>
+<div class="wrap">
+  <div class="badge">烧饼图床</div>
+  <h1>${escapeHtml(title)}</h1>
+  ${bodyHtml}
+  <p><a class="cta" href="${homeHref}">返回图床</a></p>
+  <div class="footer">sbimg · 自托管图床</div>
+</div></body></html>`;
+}
+
 // 邮箱激活
 router.get('/api/auth/verify-email', async (req: Request, res: Response) => {
   const token = (req.query.token as string) || '';
   try {
     const user = await verifyEmailByToken(token);
     res.type('text/html').send(
-      `<div style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:24px;text-align:center;color:#222;">
-        <h2>邮箱验证成功</h2>
-        <p>账号 <b>${escapeHtml(user.username)}</b> 已激活，现在可以上传图片了。</p>
-        <p><a href="${getSetting('app_url')}/">返回图床</a></p>
-      </div>`,
+      claudePage('邮箱验证成功', `<p>账号 <b>${escapeHtml(user.username)}</b> 已激活，现在可以上传图片了。</p>`),
     );
   } catch (err) {
     const msg = err instanceof AuthError ? err.message : '验证失败';
-    res.status(err instanceof AuthError ? err.status : 500).type('text/html').send(
-      `<div style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:24px;text-align:center;color:#222;">
-        <h2>验证失败</h2><p>${escapeHtml(msg)}</p>
-        <p><a href="${getSetting('app_url')}/">返回</a></p>
-      </div>`,
-    );
+    res
+      .status(err instanceof AuthError ? err.status : 500)
+      .type('text/html')
+      .send(claudePage('验证失败', `<p>${escapeHtml(msg)}</p>`));
   }
 });
 
@@ -190,6 +228,7 @@ router.post(
 router.post('/api/auth/logout', (req: Request, res: Response) => {
   req.session.destroy(() => {
     res.clearCookie('sbimg_sid');
+    res.clearCookie('csrf_token');
     res.json({ success: true });
   });
 });

@@ -22,7 +22,7 @@ const schema = z.object({
   // session / 鉴权
   SESSION_SECRET: z.string().min(16, 'SESSION_SECRET 至少 16 个字符'),
   TRUST_PROXY: z.coerce.number().int().min(0).default(1),
-  COOKIE_SECURE: boolStr.default('false'),
+  COOKIE_SECURE: boolStr.default('true'),
 
   // 初始管理员（首次启动时若 users 表为空自动创建）
   INIT_ADMIN_USER: z.string().default('admin'),

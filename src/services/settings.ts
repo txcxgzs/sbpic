@@ -30,6 +30,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   allow_register: 'true',
   register_limit_per_10min: '3',
   max_size_mb: '20',
+  user_storage_quota_mb: '0',
   base_url: 'http://localhost:8321',
   // 限流
   global_limit_per_min: '300',

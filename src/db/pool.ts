@@ -23,6 +23,7 @@ export interface ImageRow {
   width: number | null;
   height: number | null;
   user_id: number | null;
+  disabled: number;
   created_at: Date;
 }
 
@@ -34,6 +35,7 @@ export interface UserRow {
   api_token: string;
   email: string | null;
   email_verified: number;
+  disabled: number;
   created_at: Date;
 }
 

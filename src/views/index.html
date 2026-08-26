@@ -6,164 +6,190 @@
 <title>烧饼图床 · sbimg</title>
 <style>
 :root{
-  --bg:#f5f5f7; --card:#ffffff; --card-2:#f5f5f7;
-  --border:#ececee; --border-2:#e2e2e5;
-  --text:#1d1d1f; --text-2:#6e6e73; --text-3:#a1a1a6;
-  --accent:#0071e3; --accent-soft:#e8f1ff; --accent-soft-2:#d1e4ff;
+  --bg:#f5f5f7; --card:#ffffff; --card-2:#f5f5f7; --card-3:#efeff1;
+  --border:#eaeaec; --border-2:#e0e0e3;
+  --text:#1d1d1f; --text-2:#6e6e73; --text-3:#a1a1a6; --text-4:#c7c7cc;
+  --accent:#0071e3; --accent-2:#00a2ff; --accent-soft:#e8f1ff; --accent-soft-2:#d1e4ff;
   --ok:#34c759; --ok-bg:#e8f9ed; --warn:#ff9f0a; --warn-bg:#fff5e6; --bad:#ff3b30; --bad-bg:#ffeee9;
-  --radius:16px; --radius-sm:12px;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.03);
-  --shadow:0 4px 20px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
-  --shadow-lg:0 16px 48px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.06);
+  --purple:#af52de; --purple-bg:#f5ecfe; --pink:#ff2d92; --pink-bg:#ffe9f4; --teal:#30b0c7; --teal-bg:#e3f6fa; --indigo:#5856d6; --indigo-bg:#ece9fe;
+  --radius:18px; --radius-sm:12px; --radius-xs:8px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.03);
+  --shadow:0 2px 8px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  --shadow-lg:0 24px 60px rgba(0,0,0,.16),0 8px 24px rgba(0,0,0,.08);
+  --spring:cubic-bezier(.22,1,.36,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;letter-spacing:-.01em}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-size:14px;line-height:1.5;letter-spacing:-.01em}
 a{color:var(--accent);text-decoration:none}
-::-webkit-scrollbar{width:8px;height:8px}
+::selection{background:var(--accent-soft-2)}
+::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#d1d1d6;border-radius:8px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb{background:#d1d1d6;border-radius:10px;border:3px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#b0b0b5}
 
 /* ===== 布局 ===== */
 .app{display:flex;min-height:100vh}
-.sidebar{width:240px;background:rgba(255,255,255,.72);border-right:1px solid var(--border);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:20;transition:transform .25s ease}
-.sidebar .logo{padding:24px 20px 18px;display:flex;align-items:center;gap:12px}
-.sidebar .logo .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#0071e3,#00a2ff);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;box-shadow:0 2px 8px rgba(0,113,227,.3)}
-.sidebar .logo .txt{font-size:16px;font-weight:600;letter-spacing:-.02em}
-.sidebar .logo .txt span{display:block;font-size:10px;color:var(--text-3);font-weight:500;letter-spacing:1.5px;margin-top:1px}
-.nav{flex:1;padding:6px 12px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
-.nav-section{font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.8px;text-transform:uppercase;padding:14px 12px 6px}
-.nav-item{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:var(--radius-sm);color:var(--text-2);cursor:pointer;font-size:14px;font-weight:500;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
-.nav-item:hover{background:rgba(0,0,0,.04);color:var(--text)}
+.sidebar{width:248px;background:rgba(255,255,255,.8);border-right:1px solid var(--border);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:20;transition:transform .3s var(--spring)}
+.sidebar .logo{padding:26px 22px 20px;display:flex;align-items:center;gap:13px}
+.sidebar .logo .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0071e3,#00a2ff);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;box-shadow:0 4px 12px rgba(0,113,227,.32)}
+.sidebar .logo .txt{font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.sidebar .logo .txt span{display:block;font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:2px;margin-top:2px}
+.nav{flex:1;padding:4px 14px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:700;color:var(--text-4);letter-spacing:1px;text-transform:uppercase;padding:18px 14px 8px}
+.nav-item{position:relative;display:flex;align-items:center;gap:13px;padding:10px 14px;border-radius:var(--radius-sm);color:var(--text-2);cursor:pointer;font-size:14px;font-weight:500;transition:.18s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.nav-item:hover{background:rgba(0,0,0,.045);color:var(--text)}
 .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.nav-item .ico{width:20px;text-align:center;flex-shrink:0;font-size:16px;opacity:.75}
+.nav-item.active::before{content:'';position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-item .ico{width:22px;text-align:center;flex-shrink:0;font-size:16px;opacity:.7}
 .nav-item.active .ico{opacity:1}
-.sidebar .foot{padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3)}
-.main{flex:1;margin-left:240px;min-width:0;display:flex;flex-direction:column;min-height:100vh}
-.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 36px;position:sticky;top:0;background:rgba(245,245,247,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);z-index:10}
-.topbar .crumb{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.sidebar .foot{padding:16px 22px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);letter-spacing:.2px}
+.main{flex:1;margin-left:248px;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:64px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;background:rgba(245,245,247,.78);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);z-index:10}
+.topbar .crumb{font-size:18px;font-weight:600;letter-spacing:-.02em}
 .topbar .crumb .sub{color:var(--text-3);font-weight:400;margin-left:8px;font-size:13px}
-.topbar .user-chip{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}
-.topbar .user-chip .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e8e8ed,#d1d1d6);border:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-2)}
+.topbar .user-chip{display:flex;align-items:center;gap:11px;font-size:13px;cursor:pointer;padding:5px 8px 5px 12px;border-radius:30px;transition:.15s}
+.topbar .user-chip:hover{background:rgba(0,0,0,.04)}
+.topbar .user-chip .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0071e3,#00a2ff);border:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
 .topbar .user-chip .info{display:flex;flex-direction:column;line-height:1.3;text-align:right}
 .topbar .user-chip .info .name{font-weight:600;font-size:13px;color:var(--text)}
 .topbar .user-chip .info .role{font-size:11px;color:var(--text-3)}
-.content{padding:32px 36px;flex:1;max-width:1200px;width:100%}
+.content{padding:36px 40px 48px;flex:1;max-width:1240px;width:100%}
 
 /* ===== 通用 ===== */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
-.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.02em}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.02em}
 .card-title .sub{font-size:12px;color:var(--text-3);font-weight:400}
-.btn{padding:9px 18px;border:none;border-radius:var(--radius-sm);background:rgba(0,0,0,.04);color:var(--text);font-size:13.5px;font-weight:500;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;white-space:nowrap}
-.btn:hover{background:rgba(0,0,0,.07)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,113,227,.3)}
-.btn-primary:hover{background:#0062c4;box-shadow:0 2px 8px rgba(0,113,227,.35)}
+.btn{padding:10px 20px;border:none;border-radius:100px;background:var(--card-3);color:var(--text);font-size:13.5px;font-weight:500;cursor:pointer;transition:.18s var(--spring);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;white-space:nowrap}
+.btn:hover{background:var(--border-2);transform:scale(1.02)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,#0071e3,#0089ff);color:#fff;box-shadow:0 2px 8px rgba(0,113,227,.3)}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(0,113,227,.4);filter:brightness(1.05)}
 .btn-danger{background:var(--bad-bg);color:var(--bad)}
 .btn-danger:hover{background:#ffd9d4;color:var(--bad)}
-.btn-sm{padding:6px 14px;font-size:12.5px;border-radius:9px}
+.btn-sm{padding:7px 16px;font-size:12.5px}
 .btn-ghost{background:transparent;color:var(--text-2)}
-.btn-ghost:hover{background:rgba(0,0,0,.04);color:var(--text)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .field{margin-bottom:18px}
-.field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:7px;font-weight:600}
-.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:var(--card-2);border:1.5px solid transparent;border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;transition:.15s}
+.field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:12px 15px;background:var(--card-2);border:1.5px solid transparent;border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;transition:.15s}
+.field input::placeholder,.field textarea::placeholder{color:var(--text-4)}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--card);box-shadow:0 0 0 4px var(--accent-soft)}
-.field .hint{font-size:11.5px;color:var(--text-3);margin-top:6px}
-.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px;line-height:1.5}
+.field select{background:var(--card-2);cursor:pointer}
+.field .hint{font-size:11.5px;color:var(--text-3);margin-top:7px;line-height:1.4}
+.badge{font-size:11px;padding:3px 11px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px;line-height:1.5}
 .badge-ok{background:var(--ok-bg);color:var(--ok)}
 .badge-warn{background:var(--warn-bg);color:var(--warn)}
 .badge-bad{background:var(--bad-bg);color:var(--bad)}
-.badge-admin{background:var(--warn-bg);color:var(--warn)}
+.badge-admin{background:var(--purple-bg);color:var(--purple)}
 .badge-user{background:rgba(0,0,0,.05);color:var(--text-2)}
+.filter-select{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:100px;font-size:12.5px;background:var(--card);font-family:inherit;cursor:pointer;transition:.15s;color:var(--text-2);font-weight:500}
+.filter-select:hover{border-color:var(--accent);color:var(--accent)}
+.filter-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* ===== 欢迎区 ===== */
+.hero{background:linear-gradient(135deg,#0071e3 0%,#00a2ff 100%);border-radius:var(--radius);padding:32px 34px;margin-bottom:22px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,113,227,.22)}
+.hero::after{content:'';position:absolute;top:-40px;right:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.12)}
+.hero::before{content:'';position:absolute;bottom:-60px;right:60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero .greet{font-size:13px;opacity:.85;margin-bottom:6px;font-weight:500}
+.hero .name{font-size:26px;font-weight:700;letter-spacing:-.03em;position:relative;z-index:1}
+.hero .name span{font-weight:400;opacity:.8}
+.hero .desc{font-size:13px;opacity:.8;margin-top:10px;position:relative;z-index:1}
 
 /* ===== 统计卡 ===== */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow-sm)}
-.stat .label{font-size:12px;color:var(--text-3);margin-bottom:10px;font-weight:500}
-.stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
-.stat .sub{font-size:11px;color:var(--text-3);margin-top:5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.stat .label{font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:7px}
+.stat .label .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.stat .num{font-size:32px;font-weight:700;letter-spacing:-.03em;color:var(--text);line-height:1.1}
+.stat .sub{font-size:11px;color:var(--text-3);margin-top:6px}
 
 /* ===== 表格 ===== */
-.tbl-wrap{overflow-x:auto}
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{padding:12px 16px;text-align:left;font-weight:600;color:var(--text-3);font-size:11px;letter-spacing:.3px;border-bottom:1px solid var(--border);background:transparent;white-space:nowrap;text-transform:uppercase}
-td{padding:14px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+th{padding:12px 16px;text-align:left;font-weight:600;color:var(--text-3);font-size:11px;letter-spacing:.4px;border-bottom:1.5px solid var(--border);background:transparent;white-space:nowrap;text-transform:uppercase}
+td{padding:15px 16px;border-bottom:1px solid var(--border);color:var(--text);transition:.1s}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(0,0,0,.015)}
+tr:hover td{background:var(--card-2)}
 .mono{font-family:"SF Mono","JetBrains Mono","Cascadia Code",Consolas,monospace;font-size:12px;color:var(--text-2)}
 .muted{color:var(--text-3)}
-.thumb{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--card-2);border:none}
-.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:18px;flex-wrap:wrap}
-.pager button{min-width:36px;height:36px;border-radius:10px}
-.empty{text-align:center;padding:48px 20px;color:var(--text-3);font-size:14px}
+.thumb{width:46px;height:46px;border-radius:var(--radius-xs);object-fit:cover;background:var(--card-2);border:none}
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.pager button{min-width:38px;height:38px}
+.empty{text-align:center;padding:56px 20px;color:var(--text-3);font-size:14px}
+.empty .ico{font-size:40px;opacity:.25;margin-bottom:14px;display:block}
 
 /* ===== 上传区 ===== */
-.drop{border:2px dashed var(--border-2);border-radius:var(--radius);padding:52px 24px;text-align:center;cursor:pointer;transition:.2s;background:var(--card-2)}
-.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
-.drop.drag{border-color:var(--accent);background:var(--accent-soft)}
-.drop .big{font-size:34px;margin-bottom:14px;opacity:.35}
-.drop .t1{font-size:15px;color:var(--text-2);margin-bottom:5px;font-weight:500}
-.drop .t2{font-size:12.5px;color:var(--text-3)}
+.drop{border:2px dashed var(--border-2);border-radius:var(--radius);padding:56px 24px;text-align:center;cursor:pointer;transition:.2s var(--spring);background:var(--card-2)}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+.drop.drag{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.005)}
+.drop .big-ico{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent-soft),var(--accent-soft-2));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;color:var(--accent);transition:.2s}
+.drop:hover .big-ico{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,113,227,.18)}
+.drop .t1{font-size:16px;color:var(--text);margin-bottom:6px;font-weight:600}
+.drop .t2{font-size:13px;color:var(--text-3)}
 .drop.disabled{opacity:.5;cursor:not-allowed}
-.upload-results{margin-top:18px;display:flex;flex-direction:column;gap:12px}
-.upload-item{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;box-shadow:var(--shadow-sm)}
-.upload-item img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--card-2);flex-shrink:0;border:none}
+.upload-results{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.upload-item{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;box-shadow:var(--shadow-sm);animation:slideUp .3s var(--spring)}
+.upload-item img{width:58px;height:58px;border-radius:var(--radius-xs);object-fit:cover;background:var(--card-2);flex-shrink:0;border:none}
 .upload-item .meta{flex:1;min-width:0}
 .upload-item .name{font-size:13.5px;word-break:break-all;font-weight:500}
-.upload-item .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
-.chip{font-size:11.5px;padding:5px 11px;border-radius:8px;background:rgba(0,0,0,.04);border:none;color:var(--text-2);cursor:pointer;user-select:none;transition:.15s;font-weight:500}
+.upload-item .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{font-size:11.5px;padding:5px 12px;border-radius:20px;background:var(--card-3);border:none;color:var(--text-2);cursor:pointer;user-select:none;transition:.15s;font-weight:500}
 .chip:hover{background:var(--accent-soft);color:var(--accent)}
 .chip-url{background:var(--accent-soft);color:var(--accent)}
-.tag-dedup{font-size:10px;padding:3px 8px;border-radius:6px;background:var(--warn-bg);color:var(--warn);margin-left:6px;font-weight:600}
+.tag-dedup{font-size:10px;padding:3px 9px;border-radius:6px;background:var(--warn-bg);color:var(--warn);margin-left:6px;font-weight:600}
 
 /* ===== 信息行（只读展示） ===== */
-.info-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);gap:16px}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:17px 0;border-bottom:1px solid var(--border);gap:16px}
 .info-row:last-child{border-bottom:none;padding-bottom:0}
 .info-row:first-child{padding-top:0}
-.info-row .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.info-row .left{display:flex;flex-direction:column;gap:4px;min-width:0}
 .info-row .label{font-size:12px;color:var(--text-3);font-weight:500}
 .info-row .value{font-size:14.5px;color:var(--text);font-weight:500;word-break:break-all}
 .info-row .value .muted{color:var(--text-3);font-weight:400}
 .info-row .right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
 /* ===== Banner ===== */
-.banner{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:13.5px;border:none}
+.banner{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:13.5px;border:none;line-height:1.5}
 .banner-warn{background:var(--warn-bg);color:var(--warn)}
 
 /* ===== Modal ===== */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:90px}
 .modal-overlay.show{display:flex;animation:fadeIn .2s ease}
-.modal{background:var(--card);border:none;border-radius:var(--radius);width:460px;max-width:92vw;box-shadow:var(--shadow-lg);animation:slideUp .25s cubic-bezier(.22,1,.36,1)}
-.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-head .title{font-size:16px;font-weight:600;letter-spacing:-.02em}
-.modal-head .close{cursor:pointer;color:var(--text-3);font-size:22px;background:rgba(0,0,0,.04);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
-.modal-head .close:hover{background:rgba(0,0,0,.08);color:var(--text)}
-.modal-body{padding:24px}
+.modal{background:var(--card);border:none;border-radius:var(--radius);width:480px;max-width:92vw;box-shadow:var(--shadow-lg);animation:slideUp .35s var(--spring);overflow:hidden}
+.modal-head{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head .title{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.modal-head .close{cursor:pointer;color:var(--text-3);font-size:20px;background:var(--card-3);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
+.modal-head .close:hover{background:var(--border-2);color:var(--text);transform:rotate(90deg)}
+.modal-body{padding:26px}
 .modal-body .field:last-child{margin-bottom:0}
-.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.modal-foot{padding:18px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--card-2)}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 /* ===== Toast ===== */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(29,29,31,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:12px 22px;border-radius:24px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transition:.25s;pointer-events:none;z-index:200}
-.toast.show{opacity:1}
-.toast.ok{background:rgba(52,199,89,.92)}
-.toast.bad{background:rgba(255,59,48,.92)}
+.toast{position:fixed;bottom:36px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(29,29,31,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#fff;padding:13px 24px;border-radius:30px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transition:.3s var(--spring);pointer-events:none;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:rgba(52,199,89,.94)}
+.toast.bad{background:rgba(255,59,48,.94)}
 
 /* ===== Auth 页 ===== */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
-.auth-card{width:400px;max-width:92vw;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.auth-head{text-align:center;padding:44px 28px 28px}
-.auth-head .mark{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#0071e3,#00a2ff);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;letter-spacing:-1px;box-shadow:0 4px 16px rgba(0,113,227,.3)}
-.auth-head h1{font-size:22px;margin-bottom:5px;letter-spacing:-.02em;font-weight:600}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+.auth-wrap::before{content:'';position:absolute;top:-20%;left:-10%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,113,227,.12),transparent 65%);pointer-events:none}
+.auth-wrap::after{content:'';position:absolute;bottom:-20%;right:-10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(175,82,222,.1),transparent 65%);pointer-events:none}
+.auth-card{width:420px;max-width:92vw;background:rgba(255,255,255,.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,.6);border-radius:24px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;z-index:1}
+.auth-head{text-align:center;padding:48px 28px 28px}
+.auth-head .mark{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#0071e3,#00a2ff);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;letter-spacing:-1px;box-shadow:0 8px 24px rgba(0,113,227,.35)}
+.auth-head h1{font-size:24px;margin-bottom:6px;letter-spacing:-.03em;font-weight:700}
 .auth-head p{font-size:13.5px;color:var(--text-3)}
-.auth-tabs{display:flex;border-bottom:1px solid var(--border)}
-.auth-tab{flex:1;padding:14px;text-align:center;font-size:14px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;font-weight:500}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 28px}
+.auth-tab{flex:1;padding:14px;text-align:center;font-size:14px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:.18s var(--spring);background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;font-weight:500}
+.auth-tab:hover{color:var(--text-2)}
 .auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.auth-body{padding:28px 28px 32px}
+.auth-body{padding:28px 32px 36px}
 .auth-body .field:last-of-type{margin-bottom:18px}
-.auth-msg{color:var(--bad);font-size:12.5px;min-height:16px;margin-bottom:8px}
+.auth-msg{color:var(--bad);font-size:12.5px;min-height:16px;margin-bottom:10px;font-weight:500}
 .turnstile-wrap{margin:4px 0 14px;min-height:65px}
 
 /* ===== 响应式 ===== */
@@ -171,10 +197,14 @@ tr:hover td{background:rgba(0,0,0,.015)}
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}
   .main{margin-left:0}
-  .content{padding:20px 18px}
+  .content{padding:24px 20px}
+  .topbar{padding:0 20px}
+  .hero{padding:24px}
+  .hero .name{font-size:22px}
   .menu-toggle{display:block!important}
 }
-.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;margin-right:14px;padding:4px}
+.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;margin-right:14px;padding:4px;border-radius:8px;transition:.15s}
+.menu-toggle:hover{background:rgba(0,0,0,.05)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -197,7 +227,7 @@ tr:hover td{background:rgba(0,0,0,.015)}
         <div class="field"><label>用户名</label><input id="loginUser" type="text" autocomplete="username" /></div>
         <div class="field"><label>密码</label><input id="loginPass" type="password" autocomplete="current-password" /></div>
         <div class="auth-msg" id="loginMsg"></div>
-        <button class="btn btn-primary" id="btnLogin" style="width:100%;padding:10px">登录</button>
+        <button class="btn btn-primary" id="btnLogin" style="width:100%;padding:12px;font-size:14px">登录</button>
       </div>
       <div id="registerBox" class="hidden">
         <div class="field"><label>用户名</label><input id="regUser" type="text" placeholder="3-32 位字母数字下划线" /></div>
@@ -205,8 +235,8 @@ tr:hover td{background:rgba(0,0,0,.015)}
         <div class="field"><label>密码</label><input id="regPass" type="password" placeholder="至少 8 位" /></div>
         <div class="turnstile-wrap" id="turnstileWrap"></div>
         <div class="auth-msg" id="regMsg"></div>
-        <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:10px">注册</button>
-        <p style="font-size:11px;color:var(--text-3);margin-top:14px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
+        <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:12px;font-size:14px">注册</button>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:16px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
       </div>
     </div>
   </div>
@@ -382,7 +412,12 @@ function renderView(view){
 async function renderDashboard(c){
   const isAdmin = me.role==='admin';
   c.innerHTML = `
-    ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
+    ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto;background:rgba(255,159,10,.15);color:var(--warn)">重发验证邮件</button></div>' : ''}
+    <div class="hero">
+      <div class="greet">${new Date().getHours()<12?'早上好':new Date().getHours()<18?'下午好':'晚上好'} 👋</div>
+      <div class="name">${escapeHtml(me.username)}<span>，欢迎回来</span></div>
+      <div class="desc">${isAdmin?'管理员视角 · 可查看全站数据':'上传你的图片，获取高速直链'}</div>
+    </div>
     <div class="stats" id="statsBox"><div class="stat"><div class="label">加载中…</div></div></div>
     <div class="card">
       <div class="card-title">最近上传<span class="sub">最新 5 张</span></div>
@@ -394,11 +429,12 @@ async function renderDashboard(c){
     const recent = data.items;
     let myCount = data.total, allCount = data.total;
     if(isAdmin){ try{ const all = await api('/api/images?page=1&size=1&all=1'); allCount = all.total; }catch{} }
+    const dotImg = '#0071e3', dotAcc = '#34c759', dotRole = me.role==='admin'?'#af52de':'#8e8e93';
     $('#statsBox').innerHTML = `
-      <div class="stat"><div class="label">${isAdmin?'全站图片':'我的图片'}</div><div class="num">${isAdmin?allCount:myCount}</div>${isAdmin?`<div class="sub">我的 ${myCount} 张</div>`:''}</div>
-      <div class="stat"><div class="label">账号状态</div><div class="num" style="font-size:15px;padding-top:6px">${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">待验证</span>'}</div></div>
-      <div class="stat"><div class="label">角色</div><div class="num" style="font-size:15px;padding-top:6px">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</div></div>`;
-    if(!recent.length){ $('#recentBody').innerHTML = '<tr><td colspan="4" class="empty">暂无图片</td></tr>'; }
+      <div class="stat"><div class="label"><span class="dot" style="background:${dotImg}"></span>${isAdmin?'全站图片':'我的图片'}</div><div class="num">${isAdmin?allCount:myCount}</div>${isAdmin?`<div class="sub">我的 ${myCount} 张</div>`:''}</div>
+      <div class="stat"><div class="label"><span class="dot" style="background:${dotAcc}"></span>账号状态</div><div class="num" style="font-size:16px;padding-top:8px">${me.email_verified?'<span class="badge badge-ok">已验证</span>':'<span class="badge badge-warn">待验证</span>'}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:${dotRole}"></span>角色</div><div class="num" style="font-size:16px;padding-top:8px">${me.role==='admin'?'<span class="badge badge-admin">管理员</span>':'<span class="badge badge-user">用户</span>'}</div></div>`;
+    if(!recent.length){ $('#recentBody').innerHTML = '<tr><td colspan="4" class="empty"><span class="ico">🖼️</span>暂无图片，去上传一张吧</td></tr>'; }
     else {
       $('#recentBody').innerHTML = recent.map(it => `<tr>
         <td><img class="thumb" src="${it.url}" loading="lazy"></td>
@@ -417,9 +453,9 @@ function renderUpload(c){
     <div class="card">
       <div class="card-title">上传图片</div>
       <div class="drop ${canUpload?'':'disabled'}" id="drop">
-        <div class="big">⬆</div>
-        <div class="t1">${canUpload?'拖拽图片到此处 / 点击选择 / Ctrl+V 粘贴':'邮箱未验证，上传已禁用'}</div>
-        <div class="t2">支持 jpg / png / gif / webp / bmp</div>
+        <div class="big-ico">⬆</div>
+        <div class="t1">${canUpload?'拖拽图片到此处 · 点击选择 · Ctrl+V 粘贴':'邮箱未验证，上传已禁用'}</div>
+        <div class="t2">支持 JPG / PNG / GIF / WebP / BMP</div>
         <input id="fileInput" type="file" accept="image/*" multiple hidden>
       </div>
       <div class="upload-results" id="results"></div>
@@ -464,7 +500,7 @@ async function loadImages(){
     total = data.total;
     $('#imgCount').textContent = `共 ${total} 张`;
     const tb = $('#tbody');
-    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">暂无图片</td></tr>'; renderPager(); return; }
+    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty"><span class="ico">🖼️</span>暂无图片，去上传一张吧</td></tr>'; renderPager(); return; }
     tb.innerHTML = data.items.map(it => `<tr>
       <td><img class="thumb" src="${it.url}" loading="lazy"></td>
       <td><span class="mono">${escapeHtml(it.original_name||it.key)}</span><br><span class="muted" style="font-size:11px">${escapeHtml(it.key)}</span></td>
@@ -540,7 +576,7 @@ function renderAdmin(c){
       <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>验证</th><th>图片</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="userTbody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody></table></div>
     </div>
     <div class="card">
-      <div class="card-title">全部图片<span class="sub"><select id="adminFilter" style="padding:5px 9px;border:1px solid var(--border-2);border-radius:6px;font-size:12px;background:var(--card);font-family:inherit"><option value="all">全部</option><option value="mine">仅自己</option><option value="unowned">无主</option></select> <button class="btn btn-sm" id="btnAdminRefresh">刷新</button></span></div>
+      <div class="card-title">全部图片<span class="sub"><select id="adminFilter" class="filter-select"><option value="all">全部</option><option value="mine">仅自己</option><option value="unowned">无主</option></select> <button class="btn btn-sm" id="btnAdminRefresh">刷新</button></span></div>
       <div class="tbl-wrap"><table><thead><tr><th>预览</th><th>Key</th><th>归属</th><th>大小</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminTbody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table></div>
       <div class="pager" id="adminPager"></div>
     </div>`;
@@ -555,16 +591,16 @@ async function loadAdminStats(){
     let totalImgs = 0;
     try{ const a = await api('/api/images?page=1&size=1&all=1'); totalImgs = a.total; }catch{}
     $('#adminStats').innerHTML = `
-      <div class="stat"><div class="label">用户总数</div><div class="num">${users.items.length}</div></div>
-      <div class="stat"><div class="label">全站图片</div><div class="num">${totalImgs}</div></div>
-      <div class="stat"><div class="label">待验证用户</div><div class="num">${users.items.filter(u=>!u.email_verified).length}</div></div>`;
+      <div class="stat"><div class="label"><span class="dot" style="background:#0071e3"></span>用户总数</div><div class="num">${users.items.length}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:#34c759"></span>全站图片</div><div class="num">${totalImgs}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:#ff9f0a"></span>待验证用户</div><div class="num">${users.items.filter(u=>!u.email_verified).length}</div></div>`;
   }catch{}
 }
 async function loadUsers(){
   try{
     const j = await api('/api/admin/users');
     const tb = $('#userTbody');
-    if(!j.items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无用户</td></tr>'; return; }
+    if(!j.items.length){ tb.innerHTML = '<tr><td colspan="8" class="empty"><span class="ico">👤</span>暂无用户</td></tr>'; return; }
     tb.innerHTML = j.items.map(u => `<tr>
       <td class="muted">${u.id}</td>
       <td style="font-weight:500">${escapeHtml(u.username)}${u.id===me.id?' <span class="muted">(你)</span>':''}</td>
@@ -620,7 +656,7 @@ async function loadAdminImages(){
     const data = await api(`/api/images?${q}`);
     adminTotal = data.total;
     const tb = $('#adminTbody');
-    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">暂无图片</td></tr>'; }
+    if(!data.items.length){ tb.innerHTML = '<tr><td colspan="6" class="empty"><span class="ico">🖼️</span>暂无图片</td></tr>'; }
     else{
       tb.innerHTML = data.items.map(it => `<tr>
         <td><img class="thumb" src="${it.url}" loading="lazy"></td>
@@ -736,9 +772,9 @@ async function loadSettingsData(){
     const mailok = settingsData.mail_enabled?.value === 'true' && settingsData.smtp_host?.value && settingsData.smtp_pass?.has_value;
     const tsok = settingsData.turnstile_enabled?.value === 'true' && settingsData.turnstile_site_key?.value;
     $('#settingsStats').innerHTML = `
-      <div class="stat"><div class="label">R2 存储</div><div class="num" style="font-size:15px;padding-top:6px">${badgeConfigured(r2ok)}</div></div>
-      <div class="stat"><div class="label">邮件</div><div class="num" style="font-size:15px;padding-top:6px">${mailok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>
-      <div class="stat"><div class="label">Turnstile</div><div class="num" style="font-size:15px;padding-top:6px">${tsok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>`;
+      <div class="stat"><div class="label"><span class="dot" style="background:#0071e3"></span>R2 存储</div><div class="num" style="font-size:16px;padding-top:8px">${badgeConfigured(r2ok)}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:#34c759"></span>邮件</div><div class="num" style="font-size:16px;padding-top:8px">${mailok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>
+      <div class="stat"><div class="label"><span class="dot" style="background:#af52de"></span>Turnstile</div><div class="num" style="font-size:16px;padding-top:8px">${tsok?'<span class="badge badge-ok">已启用</span>':'<span class="badge badge-warn">未启用</span>'}</div></div>`;
   }catch(e){ toast(e.message,'bad'); }
 }
 function boolSelect(id, val){ return `<select id="${id}"><option value="true" ${val==='true'?'selected':''}>启用</option><option value="false" ${val!=='true'?'selected':''}>禁用</option></select>`; }

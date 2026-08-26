@@ -47,6 +47,22 @@ function askPass(q) {
   log('=== 烧饼图床 首次安装 ===');
   console.log('');
 
+  // 0. 前置条件说明 —— 避免配置到一半才发现缺这缺那
+  log('开始前请先准备好以下内容（宝塔面板用户按这个顺序）：');
+  console.log('  1. Cloudflare R2 桶 + API 令牌（Account ID / Access Key / Secret）');
+  console.log('  2. MySQL 数据库：宝塔 → 数据库 → 添加数据库，记下库名/用户名/密码');
+  console.log('  3. 对外域名站点：宝塔 → 网站 → 添加站点，先建好站点（后面再配反代）');
+  console.log('  建议把项目放到站点目录方便维护，例如：');
+  console.log('    cd /www/wwwroot/你的域名 && git clone <repo> sbimg && cd sbimg');
+  console.log('');
+  const ready = await ask('以上是否已准备好？(y/N)', 'N');
+  if (ready.toLowerCase() !== 'y') {
+    warn('请先完成上述准备，准备好后重新运行 npm run setup（已安装的依赖不会重装）');
+    rl.close();
+    process.exit(0);
+  }
+  console.log('');
+
   // 1. 装依赖
   log('安装依赖...');
   try { execSync('npm ci', { stdio: 'inherit', cwd: root }); ok('依赖安装完成'); }
@@ -65,7 +81,8 @@ function askPass(q) {
 
   // 3. 收集配置
   console.log('');
-  log('请填写配置（回车使用默认值）：');
+  log('MySQL 配置 — 如尚未建库，请先在宝塔 → 数据库 → 添加数据库 创建一个');
+  console.log('  （记下库名、用户名、密码；或下面选 root 自动建库建用户）');
   console.log('');
   const dbHost = await ask('MySQL 地址', '127.0.0.1');
   const dbPort = await ask('MySQL 端口', '3306');

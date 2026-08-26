@@ -51,13 +51,70 @@ sbimg/
 - MySQL 5.7+ / 8.0+
 - Cloudflare R2 桶 + API Token
 
-### 1. 获取 R2 凭据
+### 宝塔面板部署（推荐）
+
+宝塔用户按这个顺序来，别一上来就 clone：
+
+#### 1. 先建站点（宝塔 → 网站 → 添加站点）
+
+填你的域名，PHP 版本选「纯静态」即可（应用走 Node 内部端口，站点只做反向代理）。建好后你会得到 `/www/wwwroot/你的域名/` 目录。
+
+#### 2. 再建数据库（宝塔 → 数据库 → 添加数据库）
+
+起个库名（比如 `sbimg`），设密码，编码选 `utf8mb4`。**记下数据库名、用户名、密码**。
+
+#### 3. clone 到站点根目录
+
+SSH 进服务器：
+
+```bash
+cd /www/wwwroot/你的域名
+git clone https://github.com/txcxgzs/sbpic.git sbimg
+cd sbimg
+npm run setup
+```
+
+`npm run setup` 会先列出需要准备好的东西让你确认，再交互式引导填写配置（回车用默认值）：安装依赖 → 填 R2/MySQL/域名（可选 root 自动建库）→ 生成 `.env`（含随机 SESSION_SECRET）→ 编译。
+
+> 如果已 clone 到别处（如 `/root/sbimg`），可以挪过来：`mv /root/sbimg /www/wwwroot/你的域名/sbimg && cd /www/wwwroot/你的域名/sbimg`，再 `npm run setup`。
+
+#### 4. 启动
+
+```bash
+npm run deploy              # 编译 + 启动/重启（自动检测 PM2，没有则 nohup 后台跑）
+npm run deploy -- status    # 查看运行状态
+npm run deploy -- logs      # 查看日志
+npm run deploy -- stop      # 停止
+```
+
+#### 5. 配置反向代理（宝塔 → 网站 → 站点设置 → 反向代理）
+
+添加反向代理，目标 URL 填 `http://127.0.0.1:8321`（应用默认监听 8321，避开常用端口冲突）。
+
+#### 6. 编辑 .env 对齐域名与 HTTPS
+
+```bash
+# 在项目目录编辑 .env，确认这几项
+BASE_URL=https://你的域名
+APP_URL=https://你的域名
+TRUST_PROXY=1
+COOKIE_SECURE=true   # HTTPS 下设 true
+```
+
+改完 `npm run deploy` 重启生效。SSL 在宝塔站点设置 → SSL 里申请并开启。
+
+> 首次启动若 `users` 表为空，自动创建初始管理员；`INIT_ADMIN_PASS` 留空则随机密码打印到控制台，**请登录后立即改密码**。
+> 开发模式（热重载）：`npm run dev`
+
+### 手动部署（非宝塔）
+
+#### 1. 获取 R2 凭据
 
 1. Cloudflare 控制台 → R2 → 创建一个 bucket（如 `sbimg`）
 2. R2 → 管理 R2 API 令牌 → 创建 API 令牌，权限选「对象读和写」
 3. 记下 `Account ID`、`Access Key ID`、`Secret Access Key`
 
-### 2. 准备 MySQL
+#### 2. 准备 MySQL
 
 ```sql
 CREATE DATABASE sbimg CHARACTER SET utf8mb4;
@@ -68,32 +125,18 @@ FLUSH PRIVILEGES;
 
 表会在服务启动时自动创建，无需手动建表。
 
-### 3. 一键安装（推荐）
+#### 3. 安装 + 启动
 
 ```bash
 git clone <repo> sbimg
 cd sbimg
-npm run setup
+npm run setup    # 交互式引导，生成 .env 并编译
+npm run deploy   # 启动/重启
 ```
-
-`npm run setup` 会交互式引导你完成全部配置：安装依赖 → 填写 R2/MySQL/域名（可选自动建库建用户）→ 生成 `.env`（含随机 SESSION_SECRET）→ 编译。完成后执行 `npm run deploy` 启动。
 
 > 也可手动：`npm install` → `cp .env.example .env` 编辑配置 → `npm run build`。完整环境变量说明见 `.env.example` 注释。
 
-### 4. 一键部署
-
-```bash
-npm run deploy              # 编译 + 启动/重启（自动检测 PM2，没有则 nohup 后台跑）
-npm run deploy -- status    # 查看运行状态
-npm run deploy -- logs      # 查看日志
-npm run deploy -- stop      # 停止
-```
-
-- 检测到 PM2 则用 PM2 守护（自动 `pm2 save`），没有则用 nohup 后台启动并提示安装 PM2
-- 首次启动若 `users` 表为空，自动创建初始管理员；`INIT_ADMIN_PASS` 留空则随机密码打印到控制台，**请登录后立即改密码**
-- 开发模式（热重载）：`npm run dev`
-
-### 5. PM2 开机自启（可选）
+#### 4. PM2 开机自启（可选）
 
 ```bash
 npm install -g pm2
@@ -101,13 +144,9 @@ npm run deploy            # 用 PM2 启动
 pm2 startup               # 按提示执行输出的一行命令注册开机自启
 ```
 
-### 6. Nginx 反代 / 宝塔面板
+#### 5. Nginx 反代
 
 应用默认监听 `8321` 端口，通过反代对外提供服务。
-
-**宝塔面板**：网站 → 添加站点 → 填域名 → 进站点设置 → 反向代理 → 添加反向代理，目标 URL 填 `http://127.0.0.1:8321`。`.env` 里设 `BASE_URL`/`APP_URL` 为你的域名、`TRUST_PROXY=1`、`COOKIE_SECURE=true`（HTTPS）。
-
-**手动 Nginx**：
 
 ```nginx
 server {

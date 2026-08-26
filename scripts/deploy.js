@@ -84,15 +84,20 @@ if (!fs.existsSync(envFile)) {
   process.exit(1);
 }
 
-// 2. 安装依赖
+// 2. 安装依赖（build 需要 typescript/@types，装完整依赖）
 log('安装依赖...');
-run('npm ci --omit=dev', { silent: true });
+run('npm ci', { silent: true });
 ok('依赖就绪');
 
 // 3. 编译
 log('编译 TypeScript...');
 run('npm run build', { silent: true });
 ok('编译完成');
+
+// 3.5 清理 dev 依赖（减小体积，可选）
+log('精简生产依赖...');
+run('npm prune --omit=dev', { silent: true });
+ok('已精简');
 
 // 4. 启动
 if (action === 'restart') {

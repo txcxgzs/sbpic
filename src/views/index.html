@@ -256,6 +256,7 @@ a:hover{color:var(--coral-d)}
       <button class="btn btn-sm btn-primary" id="navRegister">开始使用</button>
     </div>
   </div>
+  <div id="landingAnnouncement"></div>
   <div class="landing-hero">
     <div class="eyebrow">自托管 · Cloudflare R2</div>
     <h1>快速、私密的<em>图床</em>服务</h1>
@@ -270,7 +271,7 @@ a:hover{color:var(--coral-d)}
     <div class="feature"><div class="ico">🔒</div><h3>自托管私有</h3><p>Cloudflare R2 存储，数据不经过第三方图床。账号体系 + 邮箱验证 + Turnstile 人机验证，安全可控。</p></div>
     <div class="feature"><div class="ico">📁</div><h3>图库管理</h3><p>网格图库浏览全部图片，一键复制 URL / Markdown / HTML / BBCode。管理员事后审查，违规可禁用。</p></div>
   </div>
-  <div class="landing-foot">sbimg · 自托管图床 · <a href="https://github.com/txcxgzs/sbpic" target="_blank">GitHub</a></div>
+  <div class="landing-foot">sbimg · 自托管图床 · <a href="https://github.com/txcxgzs/sbpic" target="_blank">GitHub</a><span id="footAgreement"></span></div>
 </div>
 
 <!-- ===== Auth 弹窗 ===== -->
@@ -298,6 +299,7 @@ a:hover{color:var(--coral-d)}
         <div class="field"><label>密码</label><input id="regPass" type="password" placeholder="至少 8 位" /></div>
         <div class="turnstile-wrap" id="turnstileWrap"></div>
         <div class="auth-msg" id="regMsg"></div>
+        <div id="agreeBox" class="hidden" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;font-size:12.5px;color:var(--body)"><input type="checkbox" id="regAgree" style="width:auto;margin-top:2px;flex-shrink:0" /><label for="regAgree" style="margin:0;cursor:pointer;font-weight:400">我已阅读并同意<span id="regAgreeLink" style="color:var(--coral);cursor:pointer">《用户协议》</span></label></div>
         <button class="btn btn-primary" id="btnRegister" style="width:100%;padding:11px;font-size:14px">注册</button>
         <p style="font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center">注册后需点击邮件链接激活邮箱才能上传</p>
       </div>
@@ -445,6 +447,10 @@ $('#btnLogin').addEventListener('click', async () => {
   }catch(e){ $('#loginMsg').textContent = e.message; }
 });
 $('#btnRegister').addEventListener('click', async () => {
+  if(!$('#agreeBox').classList.contains('hidden') && !$('#regAgree').checked){
+    $('#regMsg').textContent = '请先同意用户协议';
+    return;
+  }
   try{
     me = await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#regUser').value.trim(),email:$('#regEmail').value.trim(),password:$('#regPass').value,turnstileToken})});
     if(me.verification_sent) toast('注册成功，请查收邮件激活','ok');
@@ -466,6 +472,42 @@ async function setupTurnstile(){
     document.body.appendChild(s);
   }catch{ $('#turnstileWrap').innerHTML='<span style="font-size:11px;color:var(--muted)">人机验证加载失败</span>'; }
 }
+
+/* ===== 公告与协议 ===== */
+let siteInfo = null;
+async function loadSiteInfo(){
+  try{ siteInfo = await api('/api/site/info'); }catch{ siteInfo = null; }
+  // 公告横幅（首页）
+  if(siteInfo && siteInfo.announcement_enabled && siteInfo.announcement_text){
+    const el = $('#landingAnnouncement');
+    if(el) el.innerHTML = `<div class="banner banner-warn" style="max-width:780px;margin:20px auto 0;border-radius:var(--radius-sm)"><span>${escapeHtml(siteInfo.announcement_text)}</span></div>`;
+  }
+  // 页脚协议链接
+  if(siteInfo && siteInfo.agreement_enabled){
+    const foot = $('#footAgreement');
+    if(foot) foot.innerHTML = ' · <a href="javascript:void(0)" id="lnkAgreement">用户协议</a>';
+    const lnk = document.getElementById('lnkAgreement');
+    if(lnk) lnk.addEventListener('click', showAgreementModal);
+    // 注册表单勾选框
+    const box = $('#agreeBox');
+    if(box) box.classList.remove('hidden');
+  }
+  return siteInfo;
+}
+async function showAgreementModal(){
+  try{
+    const d = await api('/api/site/agreement');
+    if(!d.enabled || !d.text){ toast('暂无用户协议','bad'); return; }
+    openModal('用户协议',
+      `<div style="white-space:pre-wrap;word-break:break-word;font-size:13.5px;line-height:1.7;color:var(--body);max-height:60vh;overflow-y:auto;padding-right:8px">${escapeHtml(d.text)}</div>`,
+      `<button class="btn btn-primary" data-act="ok">我知道了</button>`);
+    $('#modalFoot [data-act=ok]').addEventListener('click', closeModal);
+  }catch(e){ toast(e.message,'bad'); }
+}
+// 注册弹窗里的协议链接
+document.addEventListener('click', e => {
+  if(e.target && e.target.id==='regAgreeLink') showAgreementModal();
+});
 
 /* ===== 进入应用 ===== */
 function enterApp(){
@@ -525,7 +567,16 @@ function renderView(view){
 /* ===== 仪表盘 ===== */
 async function renderDashboard(c){
   const isAdmin = me.role==='admin';
+  // 加载公告
+  let annBanner = '';
+  try{
+    if(!siteInfo) await loadSiteInfo();
+    if(siteInfo && siteInfo.announcement_enabled && siteInfo.announcement_text){
+      annBanner = `<div class="banner banner-warn"><span>${escapeHtml(siteInfo.announcement_text)}</span></div>`;
+    }
+  }catch{}
   c.innerHTML = `
+    ${annBanner}
     ${!me.email_verified ? '<div class="banner banner-warn"><span>⚠️ 邮箱未验证，上传功能已禁用。请查收邮件完成验证。</span><button class="btn btn-sm" id="bResend" style="margin-left:auto">重发验证邮件</button></div>' : ''}
     <div class="stats" id="statsBox"><div class="stat"><div class="label">加载中…</div></div></div>
     <div class="card">
@@ -881,6 +932,13 @@ async function renderSettings(c){
       <div class="info-row"><div class="left"><span class="label">上传大小上限 (MB)</span><span class="value" id="sMaxSize">-</span></div></div>
     </div>
     <div class="card">
+      <div class="card-title">公告与协议<span class="sub"><button class="btn btn-sm" id="btnEditNotice">编辑</button></span></div>
+      <div class="info-row"><div class="left"><span class="label">站点公告</span><span class="value" id="sAnnEnabled">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">公告内容</span><span class="value" id="sAnnText">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">用户协议</span><span class="value" id="sAgreeEnabled">-</span></div></div>
+      <div class="info-row"><div class="left"><span class="label">协议内容</span><span class="value" id="sAgreeText">-</span></div></div>
+    </div>
+    <div class="card">
       <div class="card-title">限流参数<span class="sub"><button class="btn btn-sm" id="btnEditLimits">编辑</button></span></div>
       <div class="info-row"><div class="left"><span class="label">全局每分钟</span><span class="value" id="sGlobalLimit">-</span></div></div>
       <div class="info-row"><div class="left"><span class="label">上传每IP每分钟</span><span class="value" id="sUploadLimit">-</span></div></div>
@@ -894,6 +952,7 @@ async function renderSettings(c){
   $('#btnEditMail').addEventListener('click', modalEditMail);
   $('#btnEditTurnstile').addEventListener('click', modalEditTurnstile);
   $('#btnEditSite').addEventListener('click', modalEditSite);
+  $('#btnEditNotice').addEventListener('click', modalEditNotice);
   $('#btnEditLimits').addEventListener('click', modalEditLimits);
   await loadSettingsData();
 }
@@ -928,6 +987,10 @@ async function loadSettingsData(){
     $('#sLoginFailThreshold').textContent = settingsData.login_fail_threshold?.value || '-';
     $('#sLoginBanMinutes').textContent = settingsData.login_ban_minutes?.value || '-';
     $('#sUploadConcurrency').textContent = settingsData.upload_concurrency?.value || '-';
+    $('#sAnnEnabled').innerHTML = boolBadge(settingsData.announcement_enabled?.value);
+    $('#sAnnText').innerHTML = settingsData.announcement_text?.value ? valOrDash(settingsData.announcement_text.value.slice(0,60) + (settingsData.announcement_text.value.length>60?'…':'')) : '<span class="muted">未设置</span>';
+    $('#sAgreeEnabled').innerHTML = boolBadge(settingsData.agreement_enabled?.value);
+    $('#sAgreeText').innerHTML = settingsData.agreement_text?.value ? '<span class="badge badge-ok">已编辑</span>' : '<span class="muted">未设置</span>';
     const r2ok = settingsData.r2_account_id?.value && settingsData.r2_access_key_id?.value && settingsData.r2_secret_access_key?.has_value;
     const mailok = settingsData.mail_enabled?.value === 'true' && settingsData.smtp_host?.value && settingsData.smtp_pass?.has_value;
     const tsok = settingsData.turnstile_enabled?.value === 'true' && settingsData.turnstile_site_key?.value;
@@ -1026,6 +1089,25 @@ function modalEditSite(){
     catch(e){ toast(e.message,'bad'); }
   });
 }
+function modalEditNotice(){
+  const d = settingsData;
+  openModal('编辑公告与协议',
+    `<div class="field"><label>站点公告</label>${boolSelect('mAnnEnabled', d.announcement_enabled?.value||'false')}</div>
+     <div class="field"><label>公告内容</label><textarea id="mAnnText" rows="4" style="resize:vertical;min-height:80px" placeholder="显示在首页和仪表盘的横幅公告，留空则不显示">${escapeHtml(d.announcement_text?.value||'')}</textarea><div class="hint">启用后在首页和用户仪表盘顶部显示。留空则只显示启用状态但不展示内容。</div></div>
+     <div class="field"><label>用户协议</label>${boolSelect('mAgreeEnabled', d.agreement_enabled?.value||'false')}</div>
+     <div class="field"><label>协议内容</label><textarea id="mAgreeText" rows="10" style="resize:vertical;min-height:200px" placeholder="用户协议全文，支持纯文本">${escapeHtml(d.agreement_text?.value||'')}</textarea><div class="hint">启用后注册时需勾选同意，页脚显示「用户协议」链接可查看全文。</div></div>`,
+    `<button class="btn btn-ghost" data-act="cancel">取消</button><button class="btn btn-primary" data-act="save">保存</button>`);
+  $('#modalFoot [data-act=cancel]').addEventListener('click', closeModal);
+  $('#modalFoot [data-act=save]').addEventListener('click', async () => {
+    try{ await saveSettingsApi({
+      announcement_enabled: $('#mAnnEnabled').value,
+      announcement_text: $('#mAnnText').value,
+      agreement_enabled: $('#mAgreeEnabled').value,
+      agreement_text: $('#mAgreeText').value,
+    }); closeModal(); toast('已保存','ok'); loadSettingsData(); siteInfo=null; loadSiteInfo(); }
+    catch(e){ toast(e.message,'bad'); }
+  });
+}
 function modalEditLimits(){
   const d = settingsData;
   openModal('编辑限流参数',
@@ -1054,6 +1136,7 @@ function modalEditLimits(){
 
 /* ===== 启动 ===== */
 (async () => {
+  await loadSiteInfo();
   if(await loadMe()) enterApp();
   else { $('#landingView').classList.remove('hidden'); }
 })();

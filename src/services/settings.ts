@@ -40,6 +40,11 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   login_fail_threshold: '5',
   login_ban_minutes: '15',
   upload_concurrency: '20',
+  // 公告与协议
+  announcement_enabled: 'false',
+  announcement_text: '',
+  agreement_enabled: 'false',
+  agreement_text: '',
 };
 
 /** secret 类配置项：GET 接口不回明文，只回 has_value 标记 */

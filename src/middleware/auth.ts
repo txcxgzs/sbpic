@@ -28,7 +28,7 @@ function extractBearer(req: Request): string | null {
 }
 
 /** 已登录 session 用户 → req.user；未登录则继续（可选鉴权） */
-async function attachSessionUser(req: Request, _res: Response, next: NextFunction): Promise<void> {
+async function attachSessionUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (req.session.userId) {
     const { getUserById } = await import('../services/auth');
     const user = await getUserById(req.session.userId);
@@ -40,6 +40,11 @@ async function attachSessionUser(req: Request, _res: Response, next: NextFunctio
         return;
       }
       req.user = user;
+      // 已登录但缺少 csrf_token cookie（旧 session 升级到 CSRF 版本）：
+      // 自动补发，避免所有 POST 被 403 拦截。
+      if (!req.cookies?.csrf_token) {
+        issueCsrfToken(res);
+      }
     } else {
       // 用户被删，清 session
       req.session.destroy(() => {});

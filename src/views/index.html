@@ -270,7 +270,7 @@ a:hover{color:var(--coral-d)}
     <div class="feature"><div class="ico">🔒</div><h3>自托管私有</h3><p>Cloudflare R2 存储，数据不经过第三方图床。账号体系 + 邮箱验证 + Turnstile 人机验证，安全可控。</p></div>
     <div class="feature"><div class="ico">📁</div><h3>图库管理</h3><p>网格图库浏览全部图片，一键复制 URL / Markdown / HTML / BBCode。管理员事后审查，违规可禁用。</p></div>
   </div>
-  <div class="landing-foot">sbimg · 自托管图床 · <a href="https://github.com/txcxgzs/sbimg" target="_blank">GitHub</a></div>
+  <div class="landing-foot">sbimg · 自托管图床 · <a href="https://github.com/txcxgzs/sbpic" target="_blank">GitHub</a></div>
 </div>
 
 <!-- ===== Auth 弹窗 ===== -->
@@ -777,7 +777,9 @@ async function loadUsers(){
       <td style="padding:12px">
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           ${!u.email_verified?'<button class="btn btn-sm" data-act="verify" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">验证</button>':''}
-          ${u.disabled?'<button class="btn btn-sm" data-act="enable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">启用</button>':'<button class="btn btn-sm" data-act="disable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'"'+(u.role===\'admin\'?\' disabled\':\'\')+'>禁用</button>'}
+          ${u.disabled
+            ? '<button class="btn btn-sm" data-act="enable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'">启用</button>'
+            : '<button class="btn btn-sm" data-act="disable" data-id="'+u.id+'" data-name="'+escapeHtml(u.username)+'"'+(u.role==="admin"?" disabled":"")+'>禁用</button>'}
           <button class="btn btn-sm" data-act="pwd" data-id="${u.id}" data-name="${escapeHtml(u.username)}">改密码</button>
           <button class="btn btn-sm" data-act="reset" data-id="${u.id}" data-name="${escapeHtml(u.username)}">重置Token</button>
           <button class="btn btn-sm btn-danger" data-act="del" data-id="${u.id}" data-name="${escapeHtml(u.username)}"${u.id===me.id?' disabled':''}>删除</button>

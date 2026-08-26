@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { randomBytes } from 'crypto';
 import { UserRow } from '../db/pool';
 import { getUserByApiToken } from '../services/auth';
+import { config } from '../config';
 
 // 扩展 express-session 的 SessionData
 declare module 'express-session' {
@@ -92,12 +93,24 @@ export function issueCsrfToken(res: Response): string {
   res.cookie('csrf_token', token, {
     httpOnly: false,
     sameSite: 'lax',
-    secure: false, // 跨 http/https 均可发，前端自行读取
+    secure: config.session.cookieSecure,
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   return token;
 }
+
+// 不需要 CSRF 校验的路径：
+// - 登录/注册/turnstile-key：登录前无 CSRF cookie
+// - 上传端点：Bearer token 鉴权（Authorization header 跨域被 CORS 预检拦截，不受 CSRF 影响）
+const CSRF_EXEMPT_PATHS = new Set([
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/turnstile-key',
+  '/upload',
+  '/api/upload',
+  '/api/v1/upload',
+]);
 
 /** CSRF 中间件：对状态变更请求（POST/PUT/PATCH/DELETE）校验 X-CSRF-Token === cookie */
 function csrfCheck(req: Request, res: Response, next: NextFunction): void {
@@ -106,14 +119,24 @@ function csrfCheck(req: Request, res: Response, next: NextFunction): void {
     next();
     return;
   }
-  const cookieToken = req.cookies?.csrf_token;
-  const headerToken = req.headers['x-csrf-token'];
-  // 没有 cookie（首次请求/未登录）或两者一致即可
-  if (!cookieToken || cookieToken === headerToken) {
+  // 登录/注册端点在签发 CSRF cookie 之前，无法校验
+  if (CSRF_EXEMPT_PATHS.has(req.path)) {
     next();
     return;
   }
-  res.status(403).json({ error: 'CSRF 校验失败' });
+  // Bearer token 鉴权的上传端点不受 CSRF 影响（Authorization header 跨域会被 CORS 预检拦截）
+  if (req.headers.authorization) {
+    next();
+    return;
+  }
+  const cookieToken = req.cookies?.csrf_token;
+  const headerToken = req.headers['x-csrf-token'];
+  // 必须同时有 cookie 和 header 且相等
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    res.status(403).json({ error: 'CSRF 校验失败' });
+    return;
+  }
+  next();
 }
 
 export {

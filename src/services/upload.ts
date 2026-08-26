@@ -140,9 +140,14 @@ export async function uploadImage(
       original_name: originalName ?? null,
       duplicated: false,
     };
-  } catch (err) {
-    // 并发下另一请求先入库：删掉刚上传的对象并回查
-    await safeDelete(key);
+  } catch (err: any) {
+    // 并发下另一请求先入库（ER_DUP_ENTRY）：不删 R2 对象（赢家还在用），直接回查
+    const isDup = err?.code === 'ER_DUP_ENTRY';
+    if (!isDup) {
+      // 非重复键错误：安全删掉刚上传的对象再抛出
+      await safeDelete(key);
+      throw err;
+    }
     const [rows] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM `images` WHERE `hash` = ? LIMIT 1',
       [hash],

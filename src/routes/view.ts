@@ -13,9 +13,13 @@ router.get('/i/*', viewLimiter, async (req: Request, res: Response) => {
     return;
   }
 
-  // 先查库：禁用图片禁止公开访问
+  // 先查库：未入库的 key 拒绝服务；禁用图片禁止公开访问
   const row = await getImageByKey(key);
-  if (row && row.disabled) {
+  if (!row) {
+    res.status(404).send('Not Found');
+    return;
+  }
+  if (row.disabled) {
     res.status(403).send('Forbidden');
     return;
   }

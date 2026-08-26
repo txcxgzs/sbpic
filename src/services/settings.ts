@@ -99,6 +99,12 @@ export async function saveSettings(obj: Record<string, string>): Promise<void> {
   try {
     for (const [key, value] of Object.entries(obj)) {
       if (!(key in SETTING_DEFAULTS)) continue; // 只允许已定义的 key
+      // URL 类配置校验：必须 http/https 开头
+      if ((key === 'base_url' || key === 'app_url') && value) {
+        if (!/^https?:\/\//i.test(value)) {
+          throw new Error(`${key} 必须以 http:// 或 https:// 开头`);
+        }
+      }
       await conn.query<ResultSetHeader>(
         'INSERT INTO `settings` (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
         [key, value],

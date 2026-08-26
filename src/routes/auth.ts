@@ -48,6 +48,16 @@ function publicUser(u: {
   };
 }
 
+// 重新生成 session 并绑定用户（防 session fixation）
+// 回调风格：regenerate 完成后发响应（regenerate 内部会 save session）
+function bindSession(req: Request, res: Response, userId: number, send: () => void): void {
+  req.session.regenerate(() => {
+    req.session.userId = userId;
+    issueCsrfToken(res);
+    send();
+  });
+}
+
 // 登录
 router.post('/api/auth/login', loginLimiter, async (req: Request, res: Response) => {
   const { username, password } = req.body ?? {};
@@ -75,9 +85,7 @@ router.post('/api/auth/login', loginLimiter, async (req: Request, res: Response)
     return;
   }
   clearLoginFailure(ip, username);
-  req.session.userId = user.id;
-  issueCsrfToken(res);
-  res.json(publicUser(user));
+  bindSession(req, res, user.id, () => res.json(publicUser(user)));
 });
 
 // 注册（开放，可由后台配置关闭；邮箱验证激活）
@@ -121,13 +129,11 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
       }
       const user = await createUser({ username, password, role: 'user', email, emailVerified: 0 });
       await createAndSendVerification(user.id, email);
-      req.session.userId = user.id;
-      issueCsrfToken(res);
-      res.json({
+      bindSession(req, res, user.id, () => res.json({
         ...publicUser(user),
         verification_sent: true,
         message: '注册成功，请查收邮件完成验证',
-      });
+      }));
       return;
     }
     // 邮件未启用：直接创建已验证用户（应急本地用），仍记录其填写的邮箱
@@ -138,9 +144,7 @@ router.post('/api/auth/register', registerLimiter, async (req: Request, res: Res
       email,
       emailVerified: 1,
     });
-    req.session.userId = user.id;
-    issueCsrfToken(res);
-    res.json(publicUser(user));
+    bindSession(req, res, user.id, () => res.json(publicUser(user)));
   } catch (err) {
     if (err instanceof AuthError) {
       res.status(err.status).json({ error: err.message });

@@ -398,7 +398,21 @@ function confirmBox(title, msg, onOk, danger){
 
 /* ===== Auth ===== */
 async function loadMe(){ try{ me = await api('/api/auth/me'); return true; }catch{ return false; } }
-async function logout(){ try{ await api('/api/auth/logout',{method:'POST'}); }catch{} me=null; $('#appView').classList.add('hidden'); $('#landingView').classList.remove('hidden'); }
+async function logout(){
+  try{ await api('/api/auth/logout',{method:'POST'}); }catch{}
+  me=null;
+  // 清除所有敏感状态和 DOM
+  $('#content').innerHTML='';
+  $('#navList').innerHTML='';
+  $('#chipName').textContent='';
+  $('#chipRole').textContent='';
+  $('#chipAvatar').textContent='';
+  storageInfo=null; settingsData={};
+  page=1; total=0; adminPage=1; adminTotal=0;
+  turnstileToken=null; tsWidgetId=null;
+  $('#appView').classList.add('hidden');
+  $('#landingView').classList.remove('hidden');
+}
 
 function showAuth(tab){
   switchAuthTab(tab);
@@ -557,13 +571,12 @@ function galleryItemHtml(it, showUser){
   const userTag = showUser && it.user_id!=null ? `#${it.user_id}` : (showUser ? '无主' : '');
   return `<div class="gallery-item${dis}" data-id="${it.id}">
     ${disBadge}
-    <img src="${it.url}" loading="lazy">
-    <div class="gmeta">${escapeHtml(it.original_name||it.key)} · ${fmtSize(it.size)}${userTag?' · '+userTag:''}</div>
+    <img src="${escapeHtml(it.url)}" loading="lazy">
+    <div class="gmeta">${escapeHtml(it.original_name||it.key)} · ${fmtSize(Number(it.size)||0)}${userTag?' · '+userTag:''}</div>
     <div class="overlay">
       <div class="gname">${escapeHtml(it.original_name||it.key)}</div>
       <div class="gacts">
         <button class="btn btn-sm" data-act="copy" data-url="${escapeHtml(it.url)}">复制 URL</button>
-        <button class="btn btn-sm" data-act="copy" data-val="${escapeHtml(it.url)}" style="display:none">URL</button>
         ${!it.disabled ? `<button class="btn btn-sm btn-danger" data-act="del" data-id="${it.id}">删除</button>` : ''}
       </div>
     </div>
@@ -603,7 +616,8 @@ function renderUpload(c){
   ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
   ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
   drop.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) uploadFiles(ev.dataTransfer.files); });
-  window.addEventListener('paste', onPaste);
+  // paste 监听器只绑一次（全局），onPaste 内部用 curView 判断当前视图
+  if(!window._pasteBound){ window._pasteBound = true; window.addEventListener('paste', onPaste); }
 }
 function onPaste(ev){ if(curView!=='upload' || !me || !me.email_verified) return; const fs=[]; for(const it of ev.clipboardData.items){ if(it.kind==='file'){ const f=it.getAsFile(); if(f) fs.push(f); } } if(fs.length) uploadFiles(fs); }
 function uploadFiles(files){ if(!me||!me.email_verified){ toast('请先验证邮箱','bad'); return; } Array.from(files).forEach(uploadOne); }
@@ -680,13 +694,15 @@ async function renderAccount(c){
       ${storageRow}
       <div class="info-row"><div class="left"><span class="label">API Token</span><span class="value mono" id="tokenVal">${maskToken(me.api_token)}</span></div><div class="right"><button class="btn btn-sm" id="btnShowToken">显示</button><button class="btn btn-sm" id="btnCopyToken">复制</button><button class="btn btn-sm btn-danger" id="btnResetToken">重置</button></div></div>
       <div class="info-row"><div class="left"><span class="label">密码</span><span class="value muted">••••••••</span></div><div class="right"><button class="btn btn-sm" id="btnEditPass">修改密码</button></div></div>
-    </div>`;
+    </div>
+    <button class="btn btn-danger" id="btnLogout" style="width:100%;padding:11px">退出登录</button>`;
   $('#btnEditEmail').addEventListener('click', modalEditEmail);
   if(!me.email_verified) $('#btnResend2').addEventListener('click', async () => { try{ await api('/api/auth/resend-verification',{method:'POST'}); toast('验证邮件已重发','ok'); }catch(e){ toast(e.message,'bad'); } });
   $('#btnShowToken').addEventListener('click', () => { const v=$('#btnShowToken'); const row=$('#tokenVal'); if(row.dataset.full){ row.textContent=maskToken(me.api_token); row.removeAttribute('data-full'); v.textContent='显示'; }else{ row.textContent=me.api_token; row.dataset.full='1'; v.textContent='隐藏'; } });
   $('#btnCopyToken').addEventListener('click', () => copy(me.api_token));
   $('#btnResetToken').addEventListener('click', () => confirmBox('重置 API Token','重置后旧 Token 立即失效，所有使用旧 Token 的客户端需更新。确认重置？', async () => { try{ const j=await api('/api/account/regenerate-token',{method:'POST'}); me.api_token=j.api_token; renderAccount($('#content')); toast('已重置','ok'); }catch(e){ toast(e.message,'bad'); } }, true));
   $('#btnEditPass').addEventListener('click', modalEditPass);
+  $('#btnLogout').addEventListener('click', () => confirmBox('退出登录', '确认退出当前账号？', () => logout()));
 }
 function modalEditEmail(){
   openModal('修改邮箱',
